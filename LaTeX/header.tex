@@ -1,0 +1,68 @@
+\documentclass[a4paper,12pt,BCOR=7mm]{scrbook}
+%\documentclass[a4paper,12pt,BCOR=7mm,draft]{scrbook}
+
+%% für A5-Druck
+%\documentclass[a5paper,10pt,DIVcalc,BCOR=7mm,draft]{scrbook}
+%\documentclass[a5paper,10pt,DIVcalc,BCOR=7mm]{scrbook}
+
+\usepackage[utf8x]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{ae,aecompl} %% Type1 Schriften, auch bei T1-fontenc
+\usepackage{graphicx}
+\usepackage[pdftitle={Master's Thesis}, pdfauthor={Jennifer Groß}]{hyperref}
+\usepackage{amsmath,amsfonts,amssymb}
+
+\usepackage{fouriernc}  %% New Century Schrift mit Fourier-Mathe-Schrift
+                        %% Ja, die Encoding-Warnungen sind normal, obwohl nervig.
+%% http://ctan.tug.org/tex-archive/fonts/fouriernc/
+%% http://ctan.tug.org/get/fonts/fouriernc.zip
+
+%%% andere Schriften:
+%%%%%
+%\usepackage[bitstream]{mathdesign}
+%\usepackage{cmbright}
+%\usepackage{concmath}
+
+\usepackage{psfrag}
+\usepackage{float}
+\usepackage{bibgerm} % deutsches Literaturverzeichnis
+\usepackage{longtable}
+\usepackage{wrapfig}
+%%% Pseudo-Code Algorithmen
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\floatname{algorithm}{Algorithmus}
+\usepackage{bm}
+\usepackage{datetime}
+\newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}
+
+\usepackage[normalem]{ulem} %% ganz viele Unterstreichungen
+
+%% Bei mehrzeiligen Abbildungen keine Einrückung um Platz zu sparen
+\setcapindent*{0em}
+\setkomafont{captionlabel}{\sffamily\bfseries}
+
+%%% Farben
+\usepackage{color}
+\definecolor{chapter}{rgb}{0.0,0.5,0.0}
+\addtokomafont{chapter}{\color{chapter}} %neue Farbe wird Überschriften zugewiesen
+\addtokomafont{section}{\color{chapter}}
+\addtokomafont{subsection}{\color{chapter}}
+\addtokomafont{title}{\color{chapter}\selectfont}
+
+\newcommand{\erf}{\ensuremath{\text{erf}}}
+\newcommand{\fd}[1]{\ensuremath{\,\mathrm{d}} #1}
+\newcommand{\diff}[2]{\ensuremath{\frac{\fd #1}{\fd #2}}}
+\newcommand{\pdiff}[2]{\ensuremath{\frac{\partial #1}{\partial #2}}}
+\newcommand{\eqnname}[1]{\ensuremath{\text{\textit{\small{(#1)}}}}}
+\newcommand{\rnd}[2]{\ensuremath{\,\text{rnd}\left(#1,\,#2 \right)}}
+\newcommand{\mat}[1]{\ensuremath{\uline{\mathcal{\mathbf{#1}}}}}
+\newcommand{\textth}[1]{\textbf{\textsf{#1}}}
+\renewcommand{\vec}[1]{\ensuremath{\bm{#1}}}
+
+\newcommand{\inclgrWithWidthAndCaption}[3]{\parbox{#1}{
+    \centering
+    \includegraphics[width=\linewidth]{#2}
+    #3
+  }}

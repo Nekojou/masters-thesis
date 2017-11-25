@@ -1,0 +1,90 @@
+\include{header}
+
+%opening
+\title{\huge{Comparison of different semiparametric model-based confidence bands for survival functions}\\
+	\textcolor{black}{
+       	  \vspace*{5mm} \\
+	  \Huge{Master's Thesis}\\
+	  \vspace*{5mm}
+	  \normalsize{submitted in fulfillment of\\the requirements for the degree of\\Master of Science}\\
+	  \small{written at Fachhochschule Aachen\\Fachbereich Medizintechnik und Technomathematik\\
+                 under supervision of\\
+                 \textbf{Prof. Gerhard Dikta}}
+        }
+} %% title
+
+\author{Jennifer Groß}
+
+\date{\normalsize{Aachen, \monthyeardate\today}}
+
+\begin{document}
+
+\maketitle
+
+% START: Declaration of Independence
+\cleardoublepage
+\thispagestyle{empty}
+
+\newlength{\erklStart}
+\addtolength{\erklStart}{\textheight}
+\addtolength{\erklStart}{-40ex}
+\vspace*{50ex}
+
+\noindent I hereby declare in lieu of an oath that I have completed the present Master’s thesis independently and without illegitimate assistance from third parties. 
+\\I have use no other than the specified sources and aids. In case that the thesis is additionally submitted in an electronic format, I declare that the written and electronic versions are fully identical. 
+\\The thesis has not been submitted to any examination body in this, or similar, form. \\
+
+\noindent \hspace{5em}
+\begin{minipage}{20em}
+	\vspace*{20ex}
+	Jennifer Groß\\
+	Aachen, \today
+\end{minipage}
+% END: Declaration of Independence
+
+\input{chapters/abstract}
+
+\tableofcontents
+
+\input{chapters/introduction}
+
+\input{chapters/theoretical_background}
+
+\input{chapters/simulation_studies}
+
+\input{chapters/results}
+
+\input{chapters/summary}
+
+\begin{appendix}
+
+%% Bildverzeichnis
+\listoffigures
+
+%% Tabellenverzeichnsi
+\listoftables
+
+%% automatisch erzeugtes Literaturverzeichnis
+\bibliographystyle{geralpha}  % mit Kürzel
+%\bibliographystyle{gerunsrt}  % nummeriert
+\bibliography{cites}
+
+
+\end{appendix}
+
+\clearpage
+\thispagestyle{empty}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\noindent\textsf{\Huge{\textbf{\textcolor{chapter}{Acknowledgements}}}}
+\vspace*{2ex}\\
+
+\noindent I want to thank \emph{Prof. Gerhard Dikta} for supporting me on my way to this master's thesis.
+
+Also I want to thank my friends \emph{Olaf Leidinger} and \emph{Diana Kreutz-Kielwein} for their support and motivation effort.
+
+My boyfriend \emph{Justus Schwan} always had my back and stood beside me through this long journey. Thank you for that.
+
+
+\end{document}
