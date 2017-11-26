@@ -1,17 +1,39 @@
 \chapter{Theoretical background}
 
-
+Here comes a summary of what is to be described in this chapters subchapters.
 
 \section{Introduction to survival analysis}
 
-define survival data
+In survival analysis, one is interested in the lifetime or time to failure $X$ of a specific individual. Typically this data is only defined on $\mathbb{R}_{\geq}$, as one observes the time, starting from 0, until a specific event happens. Let's assume that $X \textasciitilde F$ and let $F$ have some density $f$. Then
+\[
+S(t) = 1 - F(t)
+\]
+is called the survival function and describes the possibility that an individual is still alive at time $t$. The hazard rate 
+\[
+\lambda(t) = \frac{f(t)}{S(t)} = \frac{f(t)}{1-F(t)}
+\]
+describes the probability that an individual will fail at time $t$ under the condition that it has survived all $T<t$.
+Also the cumulative hazard function 
+\[
+\Lambda(t) = \int_{0}^{t}\lambda(x)dx = -ln(S(t))
+\]
+is often of interest.
 
-what is $S, f, F, \lambda, \Lambda$
+As observing lifetimes is not always an easy task, statisticians often have to deal with incomplete observations. This could for example be the case if a patient leaves the study without experiencing the event of interest. Then the lifetime of this patient is only known to be larger than the time when he left the study. Data of this kind is called (right-)censored.
 
-common of use is random censorship model (RCM)
-A commonly used assumption in survival analysis is that 
+A commonly used and widely accepted assumption is that the underlying censoring mechanism is of random kind and independent of the true lifetime $X$.
+This leads to the so called random censorship model (RCM), where $X_1,\ldots ,X_n \textasciitilde F$ are independent and identically distributed (IID) random variables with unknown continuous distribution function $F$. Let then $Y_1,\ldots ,Y_n \textasciitilde G$ be also a sequence of IID random variables describing the censoring time. Our observed quantities are then
+\[
+Z_i = min(X_i,Y_i) \textasciitilde H \text{ and } \delta_i = I_{[X_i\leq Y_i]}, 1 \leq i \leq n
+\]
+where $\delta_i$ is $0$ if $Z_i$ is censored or $1$ if it is a true survival time.
 
-kaplan meyer estimator, fully non-parametric
+Early nonparametric estimations of $F$ under RCM where made by Kaplan and Meier\cite{KAPLANMEIER}. They established their famous product limit or also Kaplan-Meier (KM) estimator 
+\begin{equation}\label{fnkm}
+1-F_n^{KM}(t) =  \prod_{i:Z_i \leq t} \left( 1 - \frac{\delta_i}{n-R_{i,n} + 1} \right)
+\end{equation}
+where $R_{i,n}$ is the rank of $Z_i$ within the $Z$-sample. This estimator is the nonparametric maximum likelihood estimator of $F$ and is commonly used in todays survival analysis.
+
 
 \section{RCM and the bootstrap}
 
@@ -30,7 +52,7 @@ Then
 \hat{\sigma}_{BOOT} = \sqrt{\frac{\sum_{j=1}^{N}\left(\hat{\theta}_j^*\right)^2 - \left(\sum_{j=1}^{N}\hat{\theta}_j^*\right)^2/N}{N-1}}
 \]
 is the nonparametric maximum likelihood estimator of $\sigma(F)$.
-Efron then shows that for right-censored data under RCM, the above resampling scheme can directly be transferred by replacing $\hat{F}_n$ with the Kaplan-Meier estimator of the survival function $\hat{S}_n^{km}$ and drawing the bootstrap samples $(Z_1^*,\delta_1^*),\ldots,(Z_n^*,\delta_n^*)$ in step (A) with replacement from $(Z_1,\delta_1),\ldots,(Z_n,\delta_n)$.
+Efron then shows that for right-censored data under RCM, the above resampling scheme can directly be transferred by replacing $\hat{F}_n$ with the Kaplan-Meier estimator of the survival function $\hat{S}_n^{KM}$ and drawing the bootstrap samples $(Z_1^*,\delta_1^*),\ldots,(Z_n^*,\delta_n^*)$ in step (A) with replacement from $(Z_1,\delta_1),\ldots,(Z_n,\delta_n)$.
 
 Finally he compares different location estimates and their accuracy based on $\hat{\sigma}_{BOOT}$ and $\hat{\sigma}_{GREEN}$, to come to the conclusion that the results for $\hat{\sigma}_{BOOT}$ match very well with those of $\hat{\sigma}_{GREEN}$.
 
@@ -42,27 +64,29 @@ He also constructs confidence intervals for $\hat{\theta}$ based on the bootstra
 The commonly used random censorship model can be extended by assuming a parametric regression model for the $\delta_i$. This means that we assume the conditional expectation $m(z) = \mathbb{P}(\delta = 1\mid Z=z) = \mathbb{E}(\delta \mid Z=z)$ to be described by some parametric family $\mathcal{M}:= \{m(\cdotp,\theta) \mid \theta \in \Theta\}$. This could be for example logit or probit models. 
 By using this semiparametric random censorship model (SRCM) different new estimators for the survival function $S$ where obtained.
 
-Dikta proposed that, under SRCM, the Kaplan-Meyer estimator can be outsmarted by a semiparametric estimator for $F$:
+Dikta proposed that, under SRCM, the Kaplan-Meier estimator can be outsmarted by a semiparametric estimator for $F$:
 \begin{equation}\label{fnse1}
 1-F_n^{se1}(t) = \prod_{i:Z_i \leq t} \left( \frac{n-R_{i,n}}{n-R_{i,n} + 1} \right)^{m(Z_i,\hat{\theta}_n)}
 \end{equation}
-where $\hat{\theta}_n$ is the maximum likelihood estimator of $\theta_0$, the true parameter of $m$.
+where $\hat{\theta}_n$ is the maximum likelihood estimator of $\theta_0$, the true but unknown parameter of $m$.
 He shows uniform consistency and a functional central limit result for this estimator. A comparison to the Kaplan-Meier estimator in terms of asymptotic variance showed that under correct model assumptions the new estimator is superior\cite{PAPER2}.
 
 Two years later Dikta proposed a modification of the above estimator:
 \begin{equation}\label{fnse2}
 1-F_n^{se2}(t) = \prod_{i:Z_i \leq t} \left( 1 - \frac{m(Z_i,\hat{\theta}_n)}{n-R_{i,n} + 1} \right)
 \end{equation}
-The main difference between the two estimators is that $F_n^{se1}(Z_{n:n}) = 1$, while $F_n^{se2}(Z_{n:n}) < 1$ in most cases, which matches with the behavior of $F_n^{km}(t)$. Under heavy censoring, especially when the largest observation $Z_{n:n}$ is censored, $F_n^{se1}$ attaches substantial mass to $Z_{n:n}$, which is not that realistic. Still all the results for $F_n^{se1}$ can be directly be transfered to $F_n^{se2}$. 
+The main difference between the two estimators is that $F_n^{se1}(Z_{n:n}) = 1$, while $F_n^{se2}(Z_{n:n}) < 1$ in most cases, which matches with the behavior of $F_n^{KM}(t)$. Under heavy censoring, especially when the largest observation $Z_{n:n}$ is censored, $F_n^{se1}$ attaches substantial mass to $Z_{n:n}$, which is not that realistic. Still all the results for $F_n^{se1}$ can be directly be transfered to $F_n^{se2}$. 
 Dikta establishes a strong law for integrals of arbitrary Borel-measurable functions when the estimator $F_n^{se2}$ is used for $F$ under SRCM\cite{PAPER3}.
 
 Recently Dikta, Reißel and Harlaß used a new approach to obtain a new semiparametric estimator for $S$ under SRCM. They use explicit and implicit Euler schemes to solve an identifying Volterra type integral equation. While the explicit approach results in the above estimator $F_n^{se2}$, the implicit approach yields a new semiparametic estimator:
-\begin{equation}\label{fnse2}
+\begin{equation}\label{fnse3}
 1-F_n^{se3}(t) = \prod_{i:Z_i \leq t} \left( 1 - \frac{m(Z_i,\hat{\theta}_n)}{n-R_{i,n} + m(Z_i,\hat{\theta}_n)} \right)
 \end{equation}
 The advantage of this estimator is that because $F_n^{se3}(Z_{n:n}) = 1$ it is a real probability distribution function and not a sub-distribution function. This results in better performance for small sample sizes in respect to bias. Also 
 The authors propose to use $F_n^{se3}$ as a plug-in estimator for $\int\phi dF$ and study it with respect to strong consistency, asymptotic normality and efficiency. The result is a strong law for $F_n^{se3}$ when the model is correct. In simulation studies they show that, under correct model assumption, the semiparametric estimator performs significantly better than the Kaplan-Meier estimator\cite{PAPER7}.
 
 \section{Bootstrap-based goodness-of-fit tests for SRCM}
+
+As previously stated, the performance of the proposed semiparametric estimators for $F$ strongly depends on the correct choice of the model for $m(z)$. A bootstrap approach for model checks on binary data was proposed by Dikta, Kvesic and Schmidt\cite{PAPER4}.
 
 \section{Simultaneous confidence bands for survival functions}
