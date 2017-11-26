@@ -24,7 +24,7 @@ As observing lifetimes is not always an easy task, statisticians often have to d
 A commonly used and widely accepted assumption is that the underlying censoring mechanism is of random kind and independent of the true lifetime $X$.
 This leads to the so called random censorship model (RCM), where $X_1,\ldots ,X_n \textasciitilde F$ are independent and identically distributed (IID) random variables with unknown continuous distribution function $F$. Let then $Y_1,\ldots ,Y_n \textasciitilde G$ be also a sequence of IID random variables describing the censoring time. Our observed quantities are then
 \[
-Z_i = min(X_i,Y_i) \textasciitilde H \text{ and } \delta_i = I_{[X_i\leq Y_i]}, 1 \leq i \leq n
+Z_i = min(X_i,Y_i) \textasciitilde H \text{ and } \delta_i = \mathbb{1}_{[X_i\leq Y_i]}, 1 \leq i \leq n
 \]
 where $\delta_i$ is $0$ if $Z_i$ is censored or $1$ if it is a true survival time.
 
@@ -69,7 +69,22 @@ Dikta proposed that, under SRCM, the Kaplan-Meier estimator can be outsmarted by
 1-F_n^{se1}(t) = \prod_{i:Z_i \leq t} \left( \frac{n-R_{i,n}}{n-R_{i,n} + 1} \right)^{m(Z_i,\hat{\theta}_n)}
 \end{equation}
 where $\hat{\theta}_n$ is the maximum likelihood estimator of $\theta_0$, the true but unknown parameter of $m$.
-He shows uniform consistency and a functional central limit result for this estimator. A comparison to the Kaplan-Meier estimator in terms of asymptotic variance showed that under correct model assumptions the new estimator is superior\cite{PAPER2}.
+In particular,
+\[
+\theta_n = \text{arg }\max_{\theta \in \Theta} l_n(\theta)
+\]
+where 
+\[
+l_n(\theta) = \frac{1}{n} \sum_{i=1}^{n} \left( \delta_i w_1(Z_i,\theta) + (1-\delta_i) w_2(Z_i,\theta) \right)
+\]
+is the normalized log-likelihood function and
+\[
+w_1(x,\theta) = ln(m(x,\theta)),
+w_2(x,\theta) = ln(1-m(x,\theta)) 
+\]
+for $x \in \mathbb{R}$.
+
+Dikta shows uniform consistency and a functional central limit result for this estimator $F_n^{se1}$. A comparison to the Kaplan-Meier estimator in terms of asymptotic variance showed that under correct model assumptions the new estimator is superior\cite{PAPER2}.
 
 Two years later Dikta proposed a modification of the above estimator:
 \begin{equation}\label{fnse2}
@@ -87,6 +102,34 @@ The authors propose to use $F_n^{se3}$ as a plug-in estimator for $\int\phi dF$ 
 
 \section{Bootstrap-based goodness-of-fit tests for SRCM}
 
-As previously stated, the performance of the proposed semiparametric estimators for $F$ strongly depends on the correct choice of the model for $m(z)$. A bootstrap approach for model checks on binary data was proposed by Dikta, Kvesic and Schmidt\cite{PAPER4}.
+As previously stated, the performance of the proposed semiparametric estimators for $F$ strongly depends on the correct choice of the model for $m(z)$. A bootstrap approach for model checks on SRCM was proposed by Dikta, Kvesic and Schmidt\cite{PAPER4}. To check
+\[
+H_0: m(\cdotp) \in \mathit{M} \text{\hspace{3ex}versus\hspace{3ex}} H_1:  m(\cdotp) \notin \mathit{M}
+\] 
+in a goodness-of-fit test, they propose the following model-based (MB) resampling scheme:
+\begin{resampling_scheme}
+\begin{itemize}
+\item[(A)] Set $Z_i^* = Z_i$ for $1 \leq i \leq n$.
+\item[(B)] Generate a sample $\delta_1^*,\ldots,\delta_n^*$ of independent Bernoulli random variables, where $\delta_i$ has the probability of success given by $m(Z_i,\theta_n)$, for $1 \leq i \leq n$.
+\end{itemize}
+\end{resampling_scheme}
+This resampling scheme ensures resampling under the null hypothesis in any case.
+They use a bootstrap version of the marked empirical process $R_n^1$ 
+\[
+R_n^{1*}(x) = n^{(-1/2)}\sum_{i=1}^n\left( \delta_i^* - m(Z_i^*,\theta_n^*)\right) \mathbb{1}_{\{Z_i^*\leq x\}}, 
+\]
+where $H_n^*$ denotes the empirical distribution function of the bootstrap sample,
+to compute critical values of Kolmogorov-Smirnov (KS) and Cramér-van-Mises(CvM) test statistics
+\[
+D_n^* = \sup_{o\leq x \leq \infty} \mid R_n^{1*}(x)\mid
+\]
+\[
+W_n^*  = \int (R_n^{1*}(x))^2 H_n^*(dx)
+\]
+with $\theta_n^*$ being the MLE of $\theta_0$ computed from the $Z_i^*$.
+The critical values of $D_{n,1}^*,\ldots D_{n,m}^*$ and $W_{n;1}^*,\ldots W_{n;m}^*$ can then be used to test the null hypothesis. Concretely, one can compute the p-value trough 
+\[
+\frac{1}{n} \sum_{j=1}^n \mathbb{1}_{\{D_{n,j}^*>D_n\}}.
+\]
 
 \section{Simultaneous confidence bands for survival functions}
