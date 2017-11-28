@@ -1,1 +1,43 @@
 \chapter{Simulation Studies}
+
+To compare the performance of SCBs using SRCM and Diktas new semiparametric estimator  $F_n^{se3}$ (see equation \ref{fnse3}) to those of Subramanian (see \cite{PAPER5}) for the estimator $F_n^{se2}$, we want to perform the same simulation studies as Subramanian did. For this purpose, we define the following properties along the lines of Subramanian.
+The sample size was chosen to be $n=100$, and for each of this samples the critical vales were estimated based on $N=500$ bootstrap resamples. To obtain the following three measures of performance of the different confidence bands, $k=1000$ replications of datasets were simulated.
+
+First is the empirical coverage probability (ECP), which is simply the proportion of SCBs that include $S(t)$ for all $t \in [t_1,t_2]$. 
+The second measure is the estimated average enclosed area (EAEA) defined by
+\[
+EAEA = \frac{1}{k} \sum_{i=1}^k \left\{ \sum_{j=m_1}^{m_2} l_j\Delta_{z_j}\right\},
+\]
+where $z_j, j=1,\ldots,n$ are the ordered observed minimums/lifetimes for each sample,
+$\Delta_{z_j} = z_{j+1}-z_j$, $l_j$ is the bandwidth of the computed confidence band at point $z_j$ 
+and the enclosed area for each sample is computed on the interval $[z_{m_1},z_{m_2}], 1 \leq m_1 < m_2 \leq n$ chosen to satisfy $(z_{m_1+1},z_{m_2-1}) \subset (t_1,t_2) \subset (z_{m_1},z_{m_2})$.
+Third the estimated average width is computed by
+\[L
+EAW = \frac{1}{k} \sum_{i=1}^k \left\{ \sum_{j=m_1}^{m_2} l_j\Delta_{\hat{S}_j}\right\},
+\]
+where $\Delta_{\hat{S}_j}$ is the jump size of $S_n$ at $z_j$ and the width for each sample is computed on the same interval $[z_{m_1},z_{m_2}]$ as the enclosed area.
+
+Each study contains $\nu$ cases which are compared. The interval $[t_1,t_2]$ has to be computable for all samples in all cases, therefore we define
+\[
+t_1^{(j)} = \max_{1\leq k \leq 1000} \left( \min_{1\leq i \leq 100,\delta_i=1} z_i \right), j = 1,\ldots,\nu 
+\] 
+and
+\[
+t_2^{(j)} = \min_{1\leq k \leq 1000} \left( \max_{1\leq i \leq 100,\delta_i=1} z_i \right), j = 1,\ldots,\nu 
+\]
+and choose $t_1$ to be slightly greater than $\max_{1\leq j \leq \nu}t_1^{(j)}$ and $t_2$ to be slightly smaller than  $\min_{1\leq j \leq \nu}t_2^{(j)}$.
+Finally the confidence level $1-\alpha$ is chosen as $0.95$.
+
+\section{Study with no misspecification}\label{study1}
+In this study, the failure times $X_1,\ldots,X_n$ are generated from a Weibull distribution with $F(t) = 1 - \exp(-(t/\beta_1)^{\alpha_1}), t \geq 0$ and the censoring times $Y_1,\ldots,Y_n$ are generated from a second independent Weibull distribution with $G(t) = 1 - \exp(-(t/\beta_2)^{\alpha_2}), t \geq 0$.
+Introducing a new parametrization $\theta = (\theta_1, \theta_2)^T, \theta_1 = (\alpha_1\beta_1^{-\alpha_1})/(\alpha_2\beta_2^{-\alpha_2}), \theta_2 = \alpha_2-\alpha_1$, the true model for $m(t)=\mathbb{P}(\delta=1\mid X=t)$ is the GPH model with $m(t,\theta) = \theta_1/(\theta_1+t^{\theta_2})$. Since we want to study under no misspecification, we estimate all $\theta_n$ under this model assumption.
+The parameters are set as followed: $\alpha_1=2$, $\beta_1=3$ and $\beta_2=4.5$. The last parameter $\alpha_2$ is varied in $\nu = 10$ steps between $1.1$ and $5.5$, giving different censoring rates between 18\% and 40\%.
+
+\section{First misspecification study}\label{study2}
+In this first misspecification study, the survival times/minimums $Z_1,\ldots,Z_n$ are generated from a Uniform distribution on $(0,1)$. The corresponding $\delta_i$ are then drawn from Bernoulli distributions with success parameter $p_i = m(Z_i,\alpha) = 1-\exp(-\exp(\alpha_1+\alpha_2x)), \alpha = (\alpha_1, \alpha_2)^T$ which describes a two-parameter complementary log-log model. The parameter $\alpha_2 = -5.92$ was chosen, and $\alpha_1$ is varied in $\nu = 16$ steps between $3$ and $6$, giving censoring rates between 3\% and 40\%.
+
+The misspecification is described by fitting the model $m(t,\alpha) = 1-\exp(-\exp(4+\alpha_2x))$ to the generated data. This model is only correct if $\alpha_1 = 4$ and the misspecification increases with $\alpha_1$ moving away from $4$.
+
+\section{Second misspecification study}\label{study3}
+The second misspecification study also uses Weibull distributions for $F$ and $G$ like the study in section \ref{study1} did. As parameters $\alpha_1 = 0.8$, $\beta_1=2/3$ and $\beta_2=10$ were chosen. Then $\alpha_1$ was varied in $\nu = 21$ steps between $0.3$ and $1.3$, giving censoring rates between 4\% and 32\%. 
+A constant model $m(t) = k$ was fitted to the data, which leads to misspecification if $\alpha_2 \neq 0.8$. If $\alpha_2 = 0.8$, then $\theta_2 = 0$ which results in a constant model for $m$.

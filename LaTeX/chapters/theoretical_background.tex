@@ -28,7 +28,7 @@ Z_i = min(X_i,Y_i) \textasciitilde H \text{ and } \delta_i = \mathbb{1}_{[X_i\le
 \]
 where $\delta_i$ is $0$ if $Z_i$ is censored or $1$ if it is a true survival time.
 
-Early nonparametric estimations of $F$ under RCM where made by Kaplan and Meier\cite{KAPLANMEIER}. They established their famous product limit or also Kaplan-Meier (KM) estimator 
+Early nonparametric estimations of $F$ under RCM where made by Kaplan and Meier (See \cite{KAPLANMEIER}). They established their famous product limit or also Kaplan-Meier (KM) estimator 
 \begin{equation}\label{fnkm}
 1-F_n^{KM}(t) =  \prod_{i:Z_i \leq t} \left( 1 - \frac{\delta_i}{n-R_{i,n} + 1} \right)
 \end{equation}
@@ -37,15 +37,15 @@ where $R_{i,n}$ is the rank of $Z_i$ within the $Z$-sample. This estimator is th
 
 \section{RCM and the bootstrap}
 
-An early study on the usage of bootstrap methods for analyzing standard errors of location estimates for (right-)censored data was made by Efron\cite{PAPER1}. 
+An early study on the usage of bootstrap methods for analyzing standard errors of location estimates for (right-)censored data was made by Efron (see \cite{PAPER1}). 
 Some parameter $\theta(F)$ should be estimated through its estimator $\hat{\theta} = \theta(\hat{F}_n)$, which could be the median, mean or something similar. 
 For measuring the accuracy of $\hat{\theta}$, Efron proposes to use the bootstrap version of the standard deviation instead of the usual accuracy measure, which is Greenwood's formula $\hat{\sigma}_{GREEN}$. To obtain this new $\hat{\sigma}_{BOOT}$, he proposes the following resampling scheme for uncensored data:
-\begin{resampling_scheme}
-\begin{itemize}
+\begin{resampling_scheme}\label{cb_rs}
+\begin{enumerate}
 \item[(A)] Draw $X_1^*,\ldots,X_n^*$ from $\hat{F}_n$
 \item[(B)] Calculate $\hat{\theta}^* = \theta(\hat{F}_n^*)$, where $\hat{F}_n^*$ is the empirical distribution function of the bootstrap sample
 \item[(C)] Repeat (A) and (B) N times to obtain $\hat{\theta}_1^*,\ldots,\hat{\theta}_N^*$
-\end{itemize}
+\end{enumerate}
 \end{resampling_scheme}
 Then 
 \[
@@ -61,7 +61,7 @@ He also constructs confidence intervals for $\hat{\theta}$ based on the bootstra
 
 \section{The semiparametric random cencorship model (SRCM) and its estimators}
 
-The commonly used random censorship model can be extended by assuming a parametric regression model for the $\delta_i$. This means that we assume the conditional expectation $m(z) = \mathbb{P}(\delta = 1\mid Z=z) = \mathbb{E}(\delta \mid Z=z)$ to be described by some parametric family $\mathcal{M}:= \{m(\cdotp,\theta) \mid \theta \in \Theta\}$. This could be for example logit or probit models. 
+The commonly used random censorship model can be extended by assuming a parametric regression model for the $\delta_i$. This means that we assume the conditional expectation $m(z) = \mathbb{P}(\delta = 1\mid Z=z) = \mathbb{E}(\delta \mid Z=z)$ to be described by some parametric family $\mathcal{M}:= \{m(\cdotp,\theta) \mid \theta \in \Theta\}$. This could be for example logit or probit models, as well as complementary log-log or the generalized proportional hazards (GPH) model. 
 By using this semiparametric random censorship model (SRCM) different new estimators for the survival function $S$ where obtained.
 
 Dikta proposed that, under SRCM, the Kaplan-Meier estimator can be outsmarted by a semiparametric estimator for $F$:
@@ -84,34 +84,34 @@ w_2(x,\theta) = ln(1-m(x,\theta))
 \]
 for $x \in \mathbb{R}$.
 
-Dikta shows uniform consistency and a functional central limit result for this estimator $F_n^{se1}$. A comparison to the Kaplan-Meier estimator in terms of asymptotic variance showed that under correct model assumptions the new estimator is superior\cite{PAPER2}.
+Dikta shows uniform consistency and a functional central limit result for this estimator $F_n^{se1}$. A comparison to the Kaplan-Meier estimator in terms of asymptotic variance showed that under correct model assumptions the new estimator is superior (see \cite{PAPER2}).
 
 Two years later Dikta proposed a modification of the above estimator:
 \begin{equation}\label{fnse2}
 1-F_n^{se2}(t) = \prod_{i:Z_i \leq t} \left( 1 - \frac{m(Z_i,\hat{\theta}_n)}{n-R_{i,n} + 1} \right)
 \end{equation}
 The main difference between the two estimators is that $F_n^{se1}(Z_{n:n}) = 1$, while $F_n^{se2}(Z_{n:n}) < 1$ in most cases, which matches with the behavior of $F_n^{KM}(t)$. Under heavy censoring, especially when the largest observation $Z_{n:n}$ is censored, $F_n^{se1}$ attaches substantial mass to $Z_{n:n}$, which is not that realistic. Still all the results for $F_n^{se1}$ can be directly be transfered to $F_n^{se2}$. 
-Dikta establishes a strong law for integrals of arbitrary Borel-measurable functions when the estimator $F_n^{se2}$ is used for $F$ under SRCM\cite{PAPER3}.
+Dikta establishes a strong law for integrals of arbitrary Borel-measurable functions when the estimator $F_n^{se2}$ is used for $F$ under SRCM (see \cite{PAPER3}).
 
 Recently Dikta, Reißel and Harlaß used a new approach to obtain a new semiparametric estimator for $S$ under SRCM. They use explicit and implicit Euler schemes to solve an identifying Volterra type integral equation. While the explicit approach results in the above estimator $F_n^{se2}$, the implicit approach yields a new semiparametic estimator:
 \begin{equation}\label{fnse3}
 1-F_n^{se3}(t) = \prod_{i:Z_i \leq t} \left( 1 - \frac{m(Z_i,\hat{\theta}_n)}{n-R_{i,n} + m(Z_i,\hat{\theta}_n)} \right)
 \end{equation}
 The advantage of this estimator is that because $F_n^{se3}(Z_{n:n}) = 1$ it is a real probability distribution function and not a sub-distribution function. This results in better performance for small sample sizes in respect to bias. Also 
-The authors propose to use $F_n^{se3}$ as a plug-in estimator for $\int\phi dF$ and study it with respect to strong consistency, asymptotic normality and efficiency. The result is a strong law for $F_n^{se3}$ when the model is correct. In simulation studies they show that, under correct model assumption, the semiparametric estimator performs significantly better than the Kaplan-Meier estimator\cite{PAPER7}.
+The authors propose to use $F_n^{se3}$ as a plug-in estimator for $\int\phi dF$ and study it with respect to strong consistency, asymptotic normality and efficiency. The result is a strong law for $F_n^{se3}$ when the model is correct. In simulation studies they show that, under correct model assumption, the semiparametric estimator performs significantly better than the Kaplan-Meier estimator (see \cite{PAPER7}).
 
 \section{Bootstrap-based goodness-of-fit tests for SRCM}
 
-As previously stated, the performance of the proposed semiparametric estimators for $F$ strongly depends on the correct choice of the model for $m(z)$. A bootstrap approach for model checks on SRCM was proposed by Dikta, Kvesic and Schmidt\cite{PAPER4}. To check
+As previously stated, the performance of the proposed semiparametric estimators for $F$ strongly depends on the correct choice of the model for $m(z)$. A bootstrap approach for model checks on SRCM was proposed by Dikta, Kvesic and Schmidt (see \cite{PAPER4}). To check
 \[
 H_0: m(\cdotp) \in \mathit{M} \text{\hspace{3ex}versus\hspace{3ex}} H_1:  m(\cdotp) \notin \mathit{M}
 \] 
 in a goodness-of-fit test, they propose the following model-based (MB) resampling scheme:
-\begin{resampling_scheme}
-\begin{itemize}
+\begin{resampling_scheme}\label{mb_rs}
+\begin{enumerate}
 \item[(A)] Set $Z_i^* = Z_i$ for $1 \leq i \leq n$.
 \item[(B)] Generate a sample $\delta_1^*,\ldots,\delta_n^*$ of independent Bernoulli random variables, where $\delta_i$ has the probability of success given by $m(Z_i,\theta_n)$, for $1 \leq i \leq n$.
-\end{itemize}
+\end{enumerate}
 \end{resampling_scheme}
 This resampling scheme ensures resampling under the null hypothesis in any case.
 They use a bootstrap version of the marked empirical process $R_n^1$ 
@@ -127,9 +127,41 @@ D_n^* = \sup_{o\leq x \leq \infty} \mid R_n^{1*}(x)\mid
 W_n^*  = \int (R_n^{1*}(x))^2 H_n^*(dx)
 \]
 with $\theta_n^*$ being the MLE of $\theta_0$ computed from the $Z_i^*$.
-The critical values of $D_{n,1}^*,\ldots D_{n,m}^*$ and $W_{n;1}^*,\ldots W_{n;m}^*$ can then be used to test the null hypothesis. Concretely, one can compute the p-value trough 
+The critical values of $D_{n,1}^*,\ldots D_{n,m}^*$ and $W_{n;1}^*,\ldots W_{n;m}^*$ can then be used to test the null hypothesis. Concretely, one can compute the p-value through 
 \[
 \frac{1}{n} \sum_{j=1}^n \mathbb{1}_{\{D_{n,j}^*>D_n\}}.
 \]
 
-\section{Simultaneous confidence bands for survival functions}
+\section{Simultaneous confidence bands under SRCM}
+
+As simultaneous confidence bands (SCB) are often of interest in survival analysis, Subramanian and Zhang studied advantages of SRCM based confidence bands in comparison to the classic Kaplan-Meier based ones (see \cite{PAPER5}). They used Diktas semiparametric estimator $F_n^{se2}$ (see equation \ref{fnse2})) and a two-stage bootstrap resampling scheme based on the model-based bootstrap (see resampling scheme \ref{mb_rs}) to construct four different kinds of SCBs.
+\begin{resampling_scheme}\label{2stage_rs}
+Obtain $ (Z_1^*,\delta_1^*),\ldots,(Z_n^*,\delta_n^*) $ through
+\begin{enumerate}
+\item[(A)] Generate $Z_1^*,\ldots,Z_n^*$ from $H_n(t)$. This is equivalent to classical bootstrap from  $Z_1,\ldots,Z_n$.
+\item[(B)] Generate $\delta_1^*,\ldots,\delta_n^*$ from a Bernoulli distribution with success probability $m(Z_i^*,\theta_n)$. This is analogous to the model based bootstrap.
+\end{enumerate}
+\end{resampling_scheme}
+Based on this bootstrap method, they show a central limit theorem for the bootstrapped SRCM based survival function process $\hat{\mathbb{W}}^*(t) = \sqrt{n} (S_n^*(t)-S_n(t))$.
+Finally four kinds of SCBs are proposed.
+
+Proposed I: A $100(1-\alpha)$\% fixed-width SCB:
+\[ \left[\hat{S}(t) - n^{-1/2}q_{\alpha}, \hat{S}(t) + n^{-1/2}q_{\alpha}\right]\] with $q_{\alpha}$ satisfying
+\[ \mathbb{P}_n\left( \sup_{t_1\leq t \leq t_2} \mid\hat{\mathbb{W}}^*(t)\mid \leq q_{\alpha} \right) = 1 - \alpha.\]
+
+Proposed II: A $100(1-\alpha)$\% variable-width SCB:
+\[ \left[\hat{S}(t) - n^{-1/2}\hat{S}(t)(\hat{V}(t))^{1/2}q_{\alpha}, \hat{S}(t) + n^{-1/2}\hat{S}(t)(\hat{V}(t))^{1/2}q_{\alpha}\right]\]
+with $q_{\alpha}$ satisfying 
+\[ \mathbb{P}_n\left( \sup_{t_1\leq t \leq t_2} \mid\hat{\mathbb{W}_2}^*(t)\mid \leq q_{\alpha} \right) = 1 - \alpha\] 
+using the studentized process $\hat{\mathbb{W}_2^*}(\cdotp) = \hat{\mathbb{W}}^*(\cdotp)/(\hat{S}(\cdotp)\hat{V}(\cdotp)^{1/2})$.
+
+Proposed III: A transformed version of the Proposed I SCB:
+\[ \left[\hat{S}(t)^{\exp(-n^{-1/2}q_{\alpha}/(\hat{S}(t)\log\hat{S}(t)))}, \hat{S}(t)^{\exp(n^{-1/2}q_{\alpha}/(\hat{S}(t)\log\hat{S}(t)))}\right]\]
+with $q_{\alpha}$ obtained from the same distribution as for Proposed I.
+
+Proposed IV: A transformed version of the Proposed II SCB:
+\[ \left[\hat{S}(t)^{\exp(-n^{-1/2}q_{\alpha}(\hat{V}(t))^{1/2}/\log\hat{S}(t))}, \hat{S}(t)^{\exp(n^{-1/2}q_{\alpha}(\hat{V}(t))^{1/2}/\log\hat{S}(t))}\right]\]
+with $q_{\alpha}$  obtained from the same distribution as for Proposed II.
+
+In different simulation studies the authors show, that the Proposed I and Proposed III SCBs perform better than their classical competitors (namely Akritas, Hall-Wellner and Nair's Equal Precision, each transformed and untransformed) if there is no misspecification. But also under mild to moderate misspecification, the SCBs still show acceptable performance.
+The studentized versions Proposed II and Proposed IV don't perform that good at all, which is why the authors decided to put them aside.
