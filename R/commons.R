@@ -8,26 +8,15 @@ montecarloRepetitions=1000
 confidencelevel=0.05
 
 
-S.estimator2<-function(z,theta.hat){
-}
-
-S.estimator2.t<-function(t,z,theta.hat){
-}
-
-S.estimator3<-function(z,theta.hat){
-}
-
-S.estimator3.t<-function(t,z,theta.hat){
-}
-
-calculateCoverageAndEnclosedAreaAndWidth<-function(scb,globalTimeInterval){
-}
-
-save.ergs<-function(prefix){
-}
-  
-load.ergs<-function(prefix){
-}
+# TODO: Functions to be transferred:
+# S.estimator2<-function(z,theta.hat){}
+# S.estimator2.t<-function(t,z,theta.hat){}
+# S.estimator3<-function(z,theta.hat){}
+# S.estimator3.t<-function(t,z,theta.hat){}
+# calculateCoverageAndEnclosedAreaAndWidth<-function(scb,globalTimeInterval){}
+# save.ergs<-function(prefix){}
+# load.ergs<-function(prefix){}
+# plot.ergs<-function(prefix){}
 
 # Obtain one bootstrap sample from original sample using the two-stage bootstrap method
 # ZStar are generated through classical bootstrap from original Z
@@ -60,7 +49,8 @@ minUncensoredZ <- function(sample)
 # calculates the limits t1 and t2 of the global time intervall for all samples
 # t1 is slightly greater than the maximum of all uncensored minimums per sample 
 # t2 is slightly smaller than the minimum of all uncensored maximums per sample
-calculateGlobalTimeInterval <- function(allSamplesMatrix){
+calculateGlobalTimeInterval <- function(allSamplesMatrix)
+{
   deltaT = 0.0001
   
   t1 = max(sapply(allSamplesMatrix, minUncensoredZ)) + deltaT
@@ -75,7 +65,8 @@ calculateGlobalTimeInterval <- function(allSamplesMatrix){
 # (see above function calculateGlobalTimeInterval).
 # The index limits m1 and m2 are used to calculate the eaea and eaw 
 # consistantly for all scb types 
-calculateIndexLimitsForStatistics<-function(sample,globalTimeInterval){
+calculateIndexLimitsForStatistics<-function(sample,globalTimeInterval)
+{
   m1 = sum(sample$Z<globalTimeInterval[1])
   m2 = sum(sample$Z<globalTimeInterval[2]) + 1
   return(c(m1,m2))
