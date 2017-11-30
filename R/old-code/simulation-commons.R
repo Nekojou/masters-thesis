@@ -2,12 +2,13 @@ nBoot=500
 samplesize=100
 nRepititions=1000
 alpha=0.05
-deltaT=0.001
+deltaT=0.001 #for t1 and t2 be slightly smaller/bigger 
 
 # Obtain one Bootstrap sample of size n from Z, m and theta.hat
 # m has to be a declared funktion of type m(x,theta)
+#TODO; Do m as parameter?
 twoStageBootstrap<-function(Z, theta.hat){
-  Zs = sample(Z, replace = TRUE)
+  Zs = sample(Z, samplesize, replace = TRUE)
   deltas = sapply(lapply(Zs, m, theta=theta.hat), rbinom, n=1, size=1)
   return(data.frame(Z=Zs, delta=deltas))
 }
@@ -63,7 +64,7 @@ calculateT<-function(samples){
   t=c(.Machine$double.xmin,.Machine$double.xmax)
   for(i in 1:(dim(samples)[1])){
     for(j in 1:(dim(samples)[2])){
-      t[1]=max(t[1],min(samples[[i,j]]$Z))
+      t[1]=max(t[1],min(samples[[i,j]]$Z)) #Todo: use colwise min or something like that?
       t[2]=min(t[2],max(samples[[i,j]]$Z))
     }
   }
@@ -87,7 +88,7 @@ calculateCoverageAndEnclosedAreaAndWidth<-function(scb,t.interval){
   ms=calculateMs(scb$time,t.interval)
   
   Sd=S(scb$time[ms[1]:ms[2]])
-  covering=all(scb$lower[ms[1]:ms[2]]<=Sd & scb$upper[ms[1]:ms[2]]>=Sd)
+  covering=all(scb$lower[ms[1]:ms[2]]<=Sd & scb$upper[ms[1]:ms[2]]>=Sd) #Todo: is it correct to only evaluate discrete times?
   
   bandwidths=(scb$upper[ms[1]:ms[2]]-scb$lower[ms[1]:ms[2]])[1:(length(scb$time[ms[1]:ms[2]])-1)]
   enclosedArea=sum(
@@ -95,7 +96,7 @@ calculateCoverageAndEnclosedAreaAndWidth<-function(scb,t.interval){
           * bandwidths)
   
   width=sum(
-    diff(-scb$surv[ms[1]:ms[2]],1)
+    diff(-scb$surv[ms[1]:ms[2]],1) #todo: ist das - hier korrekt?
     * bandwidths)
 
   return(c(covering,enclosedArea,width))
