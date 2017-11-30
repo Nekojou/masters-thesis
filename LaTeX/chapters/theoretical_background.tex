@@ -110,15 +110,15 @@ in a goodness-of-fit test, they propose the following model-based (MB) resamplin
 \begin{resampling_scheme}\label{mb_rs}
 \begin{enumerate}
 \item[(A)] Set $Z_i^* = Z_i$ for $1 \leq i \leq n$.
-\item[(B)] Generate a sample $\delta_1^*,\ldots,\delta_n^*$ of independent Bernoulli random variables, where $\delta_i$ has the probability of success given by $m(Z_i,\theta_n)$, for $1 \leq i \leq n$.
+\item[(B)] Generate a sample $\delta_1^*,\ldots,\delta_n^*$ of independent Bernoulli random variables, where $\delta_i$ has the probability of success given by $m(Z_i,\theta_n)$, for $1 \leq i \leq n$. 
 \end{enumerate}
 \end{resampling_scheme}
-This resampling scheme ensures resampling under the null hypothesis in any case.
+This resampling scheme ensures resampling under the null hypothesis in any case, with $\theta_n$ being the MLE of $\theta_0$ calculated from the original sample $Z_1,\ldots,Z_n$.
 They use a bootstrap version of the marked empirical process $R_n^1$ 
 \[
 R_n^{1*}(x) = n^{(-1/2)}\sum_{i=1}^n\left( \delta_i^* - m(Z_i^*,\theta_n^*)\right) \mathbb{1}_{\{Z_i^*\leq x\}}, 
 \]
-where $H_n^*$ denotes the empirical distribution function of the bootstrap sample,
+where $\theta_n^*$ is the MLE of $\theta_0$ computed from the $Z_i^*$,
 to compute critical values of Kolmogorov-Smirnov (KS) and Cramér-van-Mises(CvM) test statistics
 \[
 D_n^* = \sup_{o\leq x \leq \infty} \mid R_n^{1*}(x)\mid
@@ -126,7 +126,7 @@ D_n^* = \sup_{o\leq x \leq \infty} \mid R_n^{1*}(x)\mid
 \[
 W_n^*  = \int (R_n^{1*}(x))^2 H_n^*(dx)
 \]
-with $\theta_n^*$ being the MLE of $\theta_0$ computed from the $Z_i^*$.
+with $H_n^*$ denoting the empirical distribution function of the bootstrap sample.
 The critical values of $D_{n,1}^*,\ldots D_{n,m}^*$ and $W_{n;1}^*,\ldots W_{n;m}^*$ can then be used to test the null hypothesis. Concretely, one can compute the p-value through 
 \[
 \frac{1}{n} \sum_{j=1}^n \mathbb{1}_{\{D_{n,j}^*>D_n\}}.
