@@ -46,6 +46,15 @@ study1.calculateNewParametrizationTheta <- function(alpha2)
 study1.run <- function()
 {
   
+  # generate all samples
+  allSamples = generateAllRandomSamples(study1.generateRandomSample, study1.alpha2List)
   
+  # calculate global time interval 
+  globalTimeInterval = calculateGlobalTimeInterval(allSamples)
+  
+  # set up results list
+  resultsList = setUpResultsVariables()
+
+  runAllStudyCases(allSamples, study1.alpha2List)
   
 }

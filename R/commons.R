@@ -8,6 +8,19 @@ montecarloRepetitions=1000
 confidencelevel=0.05
 
 
+runAllStudyCases <- function(allSamples, variableParameterList)
+{
+  for(parameter in variableParameterList)
+  {
+    runOneCaseStudy(parameter, allSamples[[parameter]])
+  }
+}
+
+runOneCaseStudy <- function(caseParameter, caseSamples)
+{
+  print(caseParameter)
+}
+
 # TODO: Functions to be transferred:
 # S.estimator2<-function(z,theta.hat){}
 # S.estimator2.t<-function(t,z,theta.hat){}
@@ -23,13 +36,13 @@ confidencelevel=0.05
 # the function to generate one random sample
 # the list of parameters for the sample generation 
 # and the number of montecarlo repetitions to be generated for each parameter
-generateRandomSamplesMatrix <- function(generateRandomSample, variableParameterList, numberOfMontecarloRepetitions = montecarloRepetitions)
+generateAllRandomSamples <- function(generateRandomSample, variableParameterList, numberOfMontecarloRepetitions = montecarloRepetitions)
 {
-  samples <- matrix(data.frame(), nrow=length(variableParameterList), ncol=numberOfMontecarloRepetitions)
-  for(parameterIterator in 1:length(variableParameterList)){
-    for(repetitionsIterator in 1:numberOfMontecarloRepetitions){
-      samples[[parameterIterator,repetitionsIterator]] = generateRandomSample(variableParameterList[parameterIterator])
-    }
+  samples <- list()
+  for(parameter in variableParameterList){
+    samples[[parameter]] = replicate(n = numberOfMontecarloRepetitions,
+                                     generateRandomSample(parameter),
+                                     simplify = FALSE)
   }
   return(samples)
 }
@@ -65,12 +78,12 @@ minUncensoredZ <- function(sample)
 # calculates the limits t1 and t2 of the global time intervall for all samples
 # t1 is slightly greater than the maximum of all uncensored minimums per sample 
 # t2 is slightly smaller than the minimum of all uncensored maximums per sample
-calculateGlobalTimeInterval <- function(allSamplesMatrix)
+calculateGlobalTimeInterval <- function(allSamples)
 {
   deltaT = 0.0001
   
-  t1 = max(sapply(allSamplesMatrix, minUncensoredZ)) + deltaT
-  t2 = min(sapply(allSamplesMatrix, maxUncensoredZ)) - deltaT
+  t1 = max(sapply(allSamples, sapply, minUncensoredZ)) + deltaT
+  t2 = min(sapply(allSamples, sapply, maxUncensoredZ)) - deltaT
   
   return(c(t1,t2))
 }
@@ -88,3 +101,28 @@ calculateIndexLimitsForStatistics<-function(sample,globalTimeInterval)
   return(c(m1,m2))
 }
 
+# generate empty datasets for results for each scb type
+# define a list to store all results
+# and give names to the list elements
+setUpResultsList <- function()
+{
+  resultsList = replicate(n = 10,
+                          expr = {data.frame(censoringrateOrParameter=double(),
+                                    ecp=double(),
+                                    eaea=double(),
+                                    eaw=double(),
+                                    stringsAsFactors=FALSE)},
+                          simplify = FALSE)
+
+  names(resultsList) = c("hall-wellner",
+                         "nairs-equal-precision",
+                         "akritas",
+                         "proposed-I",
+                         "new",
+                         "transformed-hall-wellner",
+                         "transformed-nairs-equal-precision",
+                         "transformed-akritas",
+                         "proposed-III",
+                         "transformed-new")
+  return(resultsList)
+}

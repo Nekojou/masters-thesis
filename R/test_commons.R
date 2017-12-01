@@ -2,27 +2,28 @@ setwd(dirname(parent.frame(2)$ofile))
 source("commons.R")
 
 
-# test function generateRandomSamplesMatrix
+# test function generateAllRandomSamples
 # this test is a little special because it only tests 
-# if the functions itself are applied correctly to each element of the result matrix
+# if the functions itself are applied correctly to each element of the result list of lists
+# and if the sizes of the lists are correct
 # the function generateRandomSample is artificial and produces no useful data
 # the parameterlist is of size 5
 # numberOfRepisitions is chosen to be 100
-test.commons.generateRandomSamplesMatrix <- function()
+test.commons.generateAllRandomSamples <- function()
 {
   generateRandomSample = function(parameter){return(data.frame(Z=sample(parameter,100,replace=TRUE),delta=rep(1,100)))}
   variableParameterList = c(1,2,3,4,5)
   numberOfRepetitions = 100
   
   set.seed(456167561)
-  allSamplesByFunction <- generateRandomSamplesMatrix(generateRandomSample, variableParameterList, numberOfRepetitions)
-  stopifnot(nrow(allSamplesByFunction)*ncol(allSamplesByFunction) == length(variableParameterList)*numberOfRepetitions)
+  allSamplesByFunction <- generateAllRandomSamples(generateRandomSample, variableParameterList, numberOfRepetitions)
+  stopifnot(length(allSamplesByFunction) == length(variableParameterList))
+  stopifnot(length(allSamplesByFunction[[variableParameterList[1]]]) == numberOfRepetitions)
   
   set.seed(456167561)
   for(parameterIterator in 1:length(variableParameterList)){
     for(repetitionsIterator in 1:numberOfRepetitions){
-        stopifnot(
-          allSamplesByFunction[[parameterIterator,repetitionsIterator]] == 
+        stopifnot(allSamplesByFunction[[parameterIterator]][[repetitionsIterator]] == 
             generateRandomSample(variableParameterList[parameterIterator]))
     }
   }
@@ -99,7 +100,7 @@ test.commons.minUncensoredZ <- function()
 }
 
 # test function calculateGlobalTimeInterval
-# generate 4 sample dataframes (2 times 2 in matrix)
+# generate 4 sample dataframes (2 times 2 in lists)
 # sample 1 has values Z from 1 to 25
 # sample 2 has values Z from 26 to 50
 # sample 3 has values Z from 51 to 75
@@ -109,15 +110,17 @@ test.commons.minUncensoredZ <- function()
 # t2 should be slightly smaller than 25 
 test.commons.calculateGlobalTimeInterval <- function()
 {
-  samples<-matrix(data.frame(), nrow=2, ncol=2)
+  samples = list()
   for(casesIterator in 1:2){
+    innerList = list()
     for(repetitionsIterator in 1:2){
       {
         Z = seq(1,25) + 25 * (2 * (casesIterator - 1) + (repetitionsIterator-1))
         delta = rep(1,25)
-        samples[[casesIterator,repetitionsIterator]] = data.frame(Z,delta)
+        innerList[[repetitionsIterator]] = data.frame(Z,delta)
       }
     }
+    samples[[casesIterator]] = innerList
   }
   
   deltaT = 0.0001
@@ -145,17 +148,38 @@ test.commons.calculateIndexLimitsForStatistics <- function()
   stopifnot(indexLimits[2] == 89)
 }
 
+# test function setUpResultsList
+# return value of function should be a list of size 10 with empty data sets inside
+test.commons.setUpResultsList <- function()
+{
+  resultsList = setUpResultsList()
+  
+  stopifnot(typeof(resultsList) == "list")
+  stopifnot(length(resultsList) == 10)
+  stopifnot(names(resultsList) == c("hall-wellner",
+                                    "nairs-equal-precision",
+                                    "akritas",
+                                    "proposed-I",
+                                    "new",
+                                    "transformed-hall-wellner",
+                                    "transformed-nairs-equal-precision",
+                                    "transformed-akritas",
+                                    "proposed-III",
+                                    "transformed-new"))
+  #ToDo: maybe test emptyness of datasets and their type
+}
 
 # function to run all tests listed in functionnames
 test.commons.runAll <- function()
 {
-  functionnames = c("generateRandomSamplesMatrix",
+  functionnames = c("generateAllRandomSamples",
                     "generateBootstrapSample",
                     "calculateCensoringRate", 
                     "maxUncensoredZ", 
                     "minUncensoredZ", 
                     "calculateGlobalTimeInterval",
-                    "calculateIndexLimitsForStatistics")
+                    "calculateIndexLimitsForStatistics",
+                    "setUpResultsList")
   
   print("Run tests for commons: ")
   for(fi in functionnames)
