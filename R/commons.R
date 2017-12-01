@@ -18,6 +18,22 @@ confidencelevel=0.05
 # load.ergs<-function(prefix){}
 # plot.ergs<-function(prefix){}
 
+# generate all samples
+# arguments are:
+# the function to generate one random sample
+# the list of parameters for the sample generation 
+# and the number of montecarlo repetitions to be generated for each parameter
+generateRandomSamplesMatrix <- function(generateRandomSample, variableParameterList, numberOfMontecarloRepetitions = montecarloRepetitions)
+{
+  samples <- matrix(data.frame(), nrow=length(variableParameterList), ncol=numberOfMontecarloRepetitions)
+  for(parameterIterator in 1:length(variableParameterList)){
+    for(repetitionsIterator in 1:numberOfMontecarloRepetitions){
+      samples[[parameterIterator,repetitionsIterator]] = generateRandomSample(variableParameterList[parameterIterator])
+    }
+  }
+  return(samples)
+}
+
 # Obtain one bootstrap sample from original sample using the two-stage bootstrap method
 # ZStar are generated through classical bootstrap from original Z
 # deltaStar are generated from bernoulli variables 

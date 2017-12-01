@@ -1,7 +1,32 @@
-this.dir <- dirname(parent.frame(2)$ofile)
-setwd(this.dir)
+setwd(dirname(parent.frame(2)$ofile))
 source("commons.R")
 
+
+# test function generateRandomSamplesMatrix
+# this test is a little special because it only tests 
+# if the functions itself are applied correctly to each element of the result matrix
+# the function generateRandomSample is artificial and produces no useful data
+# the parameterlist is of size 5
+# numberOfRepisitions is chosen to be 100
+test.commons.generateRandomSamplesMatrix <- function()
+{
+  generateRandomSample = function(parameter){return(data.frame(Z=sample(parameter,100,replace=TRUE),delta=rep(1,100)))}
+  variableParameterList = c(1,2,3,4,5)
+  numberOfRepetitions = 100
+  
+  set.seed(456167561)
+  allSamplesByFunction <- generateRandomSamplesMatrix(generateRandomSample, variableParameterList, numberOfRepetitions)
+  stopifnot(nrow(allSamplesByFunction)*ncol(allSamplesByFunction) == length(variableParameterList)*numberOfRepetitions)
+  
+  set.seed(456167561)
+  for(parameterIterator in 1:length(variableParameterList)){
+    for(repetitionsIterator in 1:numberOfRepetitions){
+        stopifnot(
+          allSamplesByFunction[[parameterIterator,repetitionsIterator]] == 
+            generateRandomSample(variableParameterList[parameterIterator]))
+    }
+  }
+}
 
 # test function generateBootstrapSample
 # this test is a little special because it only tests if my apply functions work correctly
@@ -124,7 +149,8 @@ test.commons.calculateIndexLimitsForStatistics <- function()
 # function to run all tests listed in functionnames
 test.commons.runAll <- function()
 {
-  functionnames = c("generateBootstrapSample",
+  functionnames = c("generateRandomSamplesMatrix",
+                    "generateBootstrapSample",
                     "calculateCensoringRate", 
                     "maxUncensoredZ", 
                     "minUncensoredZ", 

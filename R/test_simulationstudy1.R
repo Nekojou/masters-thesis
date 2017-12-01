@@ -1,5 +1,4 @@
-this.dir <- dirname(parent.frame(2)$ofile)
-setwd(this.dir)
+setwd(dirname(parent.frame(2)$ofile))
 source("simulationstudy1.R")
 
 # test function study1.generateRandomSample
@@ -39,7 +38,8 @@ test.study1.generateRandomSample <- function()
 # this mainly tests if the function works for vectors and arrays
 # t is a random sample from 1 to 25 of size 100 
 # alpha1 and beta1 were chosen as 1 and 2
-test.study1.survivalfunction<-function(){
+test.study1.survivalfunction<-function()
+{
   alpha1 = 1
   beta1 = 2
   t = sample(25,100,replace=TRUE)
@@ -62,7 +62,8 @@ test.study1.survivalfunction<-function(){
 # this mainly tests if the function works for vectors and arrays
 # z is a random sample from 1 to 25 of size 100 
 # theta = (theta1,theta2) is chosen as (1,2)
-test.study1.modelfunction<-function(){
+test.study1.modelfunction<-function()
+{
   theta = c(1,2)
   Z = sample(25,100,replace=TRUE)
   
@@ -80,12 +81,26 @@ test.study1.modelfunction<-function(){
   stopifnot(ergs2 == ergs3)
 }
 
+# test function study1.calculateTheta
+# chose alpha2 = 1
+# alpha1 = 2 is predefined
+# beta1 = 3 is predefined
+# beta2 = 4.5 is predefined
+# then theta1 should be (2*3^(-2))/(1*4.5^(-1)) = 1
+# and theta1 should be 1 - 2 = -1
+test.study1.calculateNewParametrizationTheta <- function()
+{
+  theta = study1.calculateNewParametrizationTheta(alpha2=1)
+  stopifnot(theta == c(1,-1))
+}
+
 # function to run all tests listed in functionnames
 test.study1.runAll <- function()
 {
   functionnames = c("generateRandomSample",
                     "survivalfunction",
-                    "modelfunction")
+                    "modelfunction",
+                    "calculateNewParametrizationTheta")
   
   print("Run tests for simulationstudy1: ")
   for(fi in functionnames)
