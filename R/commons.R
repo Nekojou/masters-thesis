@@ -1,5 +1,6 @@
 # used packages
-
+library(survival)
+library(km.ci)
 
 # common parameters
 bootstrapRepetitions=500
@@ -7,19 +8,182 @@ samplesize=100
 montecarloRepetitions=1000
 confidencelevel=0.05
 
+classicalScbNames = c("hall-wellner",
+                      #"akritas",
+                      "nairs-equal-precision",
+                      "transformed-hall-wellner",
+                      #"transformed-akritas",
+                      "transformed-nairs-equal-precision")
 
-runAllStudyCases <- function(allSamples, variableParameterList)
+# Run the studies for each parameter in variableParameterList
+# by calling the wrapper function applyRunOneCaseStudy
+runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction)
 {
-  for(parameter in variableParameterList)
+  allResultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
+                            variableParameterList = variableParameterList,
+                            allSamples = allSamples, globalTimeInterval = globalTimeInterval,
+                            trueSurvivalFunction = trueSurvivalFunction)
+  
+  # TODO: reorderResults(allResultsByCase)
+  return(allResultsByCase)
+}
+
+# This function is a helper function to make the call of runOneCaseStudy possible with lapply
+# the main problem is that both variableParameterList as well as allSamples need to be variated
+applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, globalTimeInterval, trueSurvivalFunction)
+{
+  return(runOneCaseStudy(parameter, allSamples[[which(variableParameterList == parameter)]], 
+                         globalTimeInterval, trueSurvivalFunction))
+}
+
+# Runs the study for one specific case parameter
+# Calculates the restults for all types of scbs
+# groups results together in list with 
+# caseParameter and censoringrate
+runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction)
+{
+  censoringrate = mean(sapply(caseSamples, calculateCensoringRate))
+  
+  resultsFromClassicalScbs = calculateResultsForClassicalScbs(caseSamples, globalTimeInterval, trueSurvivalFunction)
+  
+  resultsFromSubramanianScbs = list("subramanian")
+  
+  resultsFromNewScbs = list("new")
+  
+  return(c(caseParameter = caseParameter, censoringrate = censoringrate, resultsFromClassicalScbs, resultsFromSubramanianScbs, resultsFromNewScbs))
+}
+
+# Calculates empirical coverage probability,
+# estimated average enclosed area and 
+# estimated average width 
+# for the 6 classical scb types based on 
+# the Kaplan-Meier estimator
+calculateResultsForClassicalScbs <- function(monteCarloSamples, globalTimeInterval, trueSurvivalFunction)
+{
+  coveragesEnclosedAreasWidths = lapply(monteCarloSamples, calculateClassicalResultsForOneSample, 
+                                        globalTimeInterval = globalTimeInterval, 
+                                        trueSurvivalFunction = trueSurvivalFunction)
+  
+  resultsForClassicalSCBs = lapply(classicalScbNames, applyRowMeans, coveragesEnclosedAreasWidths = coveragesEnclosedAreasWidths)
+  names(resultsForClassicalSCBs) = classicalScbNames
+  
+  return(resultsForClassicalSCBs)
+}
+
+# This function is a helper function to make is possible to use lapply
+# for calculating the rowMeans for each scb-type
+applyRowMeans <- function(name, coveragesEnclosedAreasWidths)
+{
+  return(rowMeans(sapply(coveragesEnclosedAreasWidths, "[[", name)))
+}
+
+# Calculates the classical scbs for one specific sample.
+# Returns a list of results, containing
+# coverage (0 or 1), enclosed area
+# and width of the scb for each type
+calculateClassicalResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction)
+{
+  # calculate Kaplan-Meier estimator
+  sample.survfit = survfit(Surv(sample$Z, sample$delta)~1)
+  
+  scbList = list()
+  #TODO; AKRITAS?
+  # untransformed bands based on KM
+  scbList[["hall-wellner"]]          = km.ci(sample.survfit, conf.level=1-confidencelevel, method="hall-wellner")
+  scbList[["nairs-equal-precision"]] = km.ci(sample.survfit, conf.level=1-confidencelevel, method="epband")
+  #scb.akritas=km.ci(sample.survfit, conf.level=1-confidencelevel, method="akritas")
+  
+  # transformed bands based on KM
+  scbList[["transformed-hall-wellner"]]          = km.ci(sample.survfit, conf.level=1-confidencelevel, method="loghall")
+  scbList[["transformed-nairs-equal-precision"]] = km.ci(sample.survfit, conf.level=1-confidencelevel, method="logep")
+  #scb.akritas.transformed=km.ci(sample.survfit, conf.level=1-confidencelevel, method="logakritas")
+  
+  indexLimitsForStatistics = calculateIndexLimitsForStatistics(sample, globalTimeInterval)
+  
+  return(lapply(scbList, calculateStatistics, kmEstimator = sample.survfit,
+                indexLimitsForStatistics = indexLimitsForStatistics, 
+                globalTimeInterval = globalTimeInterval,
+                trueSurvivalFunction = trueSurvivalFunction))
+}
+
+# Calculates the coverage, enclosed area and width 
+# for a given scb within the given index limits
+# TODO: open questions:
+# 1. for coverage: is it correct to only evaluate at discrete times? 
+# and only for m1:m2 and not t1:t2 (because upper and lower might not be defined there)?
+# 2. what to do if m2 = 100 because z_j+1-z_j is not defined then
+# 3. why can indexlimits exceed scbs limits?
+# this was observed when hall-wellner dropped the 2 last samples. but the last one wasn't censored...
+calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, globalTimeInterval, trueSurvivalFunction)
+{
+  indexOffset = which(kmEstimator$time == scb$time[1])
+  
+  # I thought this was not necessary, but it happened that the indizes where out of range of the scb
+  if(indexLimitsForStatistics[1] < indexOffset)
   {
-    runOneCaseStudy(parameter, allSamples[[parameter]])
+    indexLimitsForStatistics[1] = indexOffset
   }
+  if(indexLimitsForStatistics[2] > (length(scb$time) + indexOffset - 1))
+  {
+    indexLimitsForStatistics[2] = (length(scb$time) + indexOffset - 1)
+  }
+  
+  indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
+  indexRangeForScb = indexRange + (1 - indexOffset)
+  
+  trueSurvivalFunctionData = trueSurvivalFunction(kmEstimator$time[indexRange])
+  
+  coverage = 0
+  if(all(scb$lower[indexRangeForScb]<=trueSurvivalFunctionData 
+         && scb$upper[indexRangeForScb]>=trueSurvivalFunctionData))
+  {
+    coverage = 1
+  }
+  
+  indexRange = indexLimitsForStatistics[1]:(indexLimitsForStatistics[2]+1)
+  if(max(indexRange) > samplesize)
+  {
+    indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
+    indexRangeForScb = indexRangeForScb[1:(length(indexRangeForScb)-1)]
+  }
+  
+  bandwidths = scb$upper[indexRangeForScb] - scb$lower[indexRangeForScb]
+  
+  enclosedArea = sum(
+    diff(kmEstimator$time[indexRange], 1)
+    * bandwidths)
+  
+#  if(is.na(enclosedArea))
+#  {
+#    print("d")
+#  }
+  
+  indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
+  indexRangeForScb = indexRange + (1 - indexOffset)
+  survforDiff = kmEstimator$surv[indexRange]
+  if(min(indexRange) == 1)
+  {
+    survforDiff = c(1, survforDiff)
+  }
+  else
+  {
+    survforDiff = c(kmEstimator$surv[indexLimitsForStatistics[1]-1], survforDiff)
+  }
+  
+  bandwidths = scb$upper[indexRangeForScb] - scb$lower[indexRangeForScb]
+  
+  width = sum(
+    diff(-survforDiff, 1)
+    * bandwidths)
+  
+#  if(is.na(width))
+#  {
+#    print("d")
+#  }
+  
+  return(c(coverage=coverage, enclosedArea=enclosedArea, width=width))
 }
 
-runOneCaseStudy <- function(caseParameter, caseSamples)
-{
-  print(caseParameter)
-}
 
 # TODO: Functions to be transferred:
 # S.estimator2<-function(z,theta.hat){}
@@ -31,6 +195,7 @@ runOneCaseStudy <- function(caseParameter, caseSamples)
 # load.ergs<-function(prefix){}
 # plot.ergs<-function(prefix){}
 
+
 # generate all samples
 # arguments are:
 # the function to generate one random sample
@@ -40,7 +205,7 @@ generateAllRandomSamples <- function(generateRandomSample, variableParameterList
 {
   samples <- list()
   for(parameter in variableParameterList){
-    samples[[parameter]] = replicate(n = numberOfMontecarloRepetitions,
+    samples[[which(variableParameterList == parameter)]] = replicate(n = numberOfMontecarloRepetitions,
                                      generateRandomSample(parameter),
                                      simplify = FALSE)
   }

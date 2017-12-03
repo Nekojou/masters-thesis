@@ -2,6 +2,60 @@ setwd(dirname(parent.frame(2)$ofile))
 source("commons.R")
 
 
+test.commons.runAllStudyCases <- function()
+{
+}
+
+test.commons.applyRunOneCaseStudy <- function()
+{
+}
+
+test.commons.runOneCaseStudy <- function()
+{
+}
+
+test.commons.calculateResultsForClassicalScbs <- function()
+{
+
+}
+
+test.commons.applyRowMeans <- function()
+{
+}
+
+test.commons.calculateClassicalResultsForOneSample <- function()
+{
+
+}
+
+# tests function calculateStatistics
+# the used scb is constructed 
+test.commons.calculateStatistics <- function()
+{
+  Z = 1/10*seq(1, 100)
+  delta = rbinom(100, 1, 0.75)
+  
+  globalTimeInterval = c(0.2001,9.8999) #exclude first and last observation
+  indexLimits = c(2,99)
+  
+  survivalfunction = function(t){ return(1-t/10)}
+  survfit = survfit(Surv(Z, delta)~1)
+  
+  scb = list()
+  scb[["time"]] = survfit$time[indexLimits[1]:indexLimits[2]]
+  scb[["surv"]] = survfit$surv[indexLimits[1]:indexLimits[2]]
+  scb[["upper"]] = scb$surv + 0.025
+  scb[["lower"]] = scb$surv - 0.025
+  
+  results = calculateStatistics(scb, survfit, indexLimits, globalTimeInterval, survivalfunction)
+
+  stopifnot(!is.na(results[["coverage"]]))
+  stopifnot(results[["coverage"]] != 0)
+  
+  stopifnot(!is.na(results[["enclosedArea"]]))
+  stopifnot(!is.na(results[["width"]]))
+}
+
 # test function generateAllRandomSamples
 # this test is a little special because it only tests 
 # if the functions itself are applied correctly to each element of the result list of lists
@@ -12,13 +66,13 @@ source("commons.R")
 test.commons.generateAllRandomSamples <- function()
 {
   generateRandomSample = function(parameter){return(data.frame(Z=sample(parameter,100,replace=TRUE),delta=rep(1,100)))}
-  variableParameterList = c(1,2,3,4,5)
+  variableParameterList = c(1.3,2.9,3,4.1,5.99)
   numberOfRepetitions = 100
   
   set.seed(456167561)
   allSamplesByFunction <- generateAllRandomSamples(generateRandomSample, variableParameterList, numberOfRepetitions)
   stopifnot(length(allSamplesByFunction) == length(variableParameterList))
-  stopifnot(length(allSamplesByFunction[[variableParameterList[1]]]) == numberOfRepetitions)
+  stopifnot(length(allSamplesByFunction[[which(variableParameterList == variableParameterList[1])]]) == numberOfRepetitions)
   
   set.seed(456167561)
   for(parameterIterator in 1:length(variableParameterList)){
@@ -172,7 +226,14 @@ test.commons.setUpResultsList <- function()
 # function to run all tests listed in functionnames
 test.commons.runAll <- function()
 {
-  functionnames = c("generateAllRandomSamples",
+  functionnames = c("runAllStudyCases",
+                    "applyRunOneCaseStudy",
+                    "runOneCaseStudy",
+                    "calculateResultsForClassicalScbs",
+                    "applyRowMeans",
+                    "calculateClassicalResultsForOneSample",
+                    "calculateStatistics",
+                    "generateAllRandomSamples",
                     "generateBootstrapSample",
                     "calculateCensoringRate", 
                     "maxUncensoredZ", 

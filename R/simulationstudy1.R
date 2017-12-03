@@ -53,8 +53,8 @@ study1.run <- function()
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
   
   # set up results list
-  resultsList = setUpResultsVariables()
+  #resultsList = setUpResultsList()
 
-  runAllStudyCases(allSamples, study1.alpha2List)
+  results <<- runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
   
 }
