@@ -32,11 +32,12 @@ test.commons.calculateClassicalResultsForOneSample <- function()
 # the used scb is constructed 
 test.commons.calculateStatistics <- function()
 {
+  # test case 1
   Z = 1/10*seq(1, 100)
-  delta = rbinom(100, 1, 0.75)
+  delta = rbinom(100, 1, 0.9)
   
-  globalTimeInterval = c(0.2001,9.8999) #exclude first and last observation
-  indexLimits = c(2,99)
+  #exclude first and last observation
+  indexLimits = c(1,100)
   
   survivalfunction = function(t){ return(1-t/10)}
   survfit = survfit(Surv(Z, delta)~1)
@@ -47,13 +48,37 @@ test.commons.calculateStatistics <- function()
   scb[["upper"]] = scb$surv + 0.025
   scb[["lower"]] = scb$surv - 0.025
   
-  results = calculateStatistics(scb, survfit, indexLimits, globalTimeInterval, survivalfunction)
+  results = calculateStatistics(scb, survfit, indexLimits, survivalfunction)
 
   stopifnot(!is.na(results[["coverage"]]))
-  stopifnot(results[["coverage"]] != 0)
+  stopifnot(results[["coverage"]] == 1)
   
   stopifnot(!is.na(results[["enclosedArea"]]))
   stopifnot(!is.na(results[["width"]]))
+  
+  print(results)
+  
+  # test case 2
+  #exclude first and last observations
+  indexLimits = c(3,97)
+  
+  survivalfunction = function(t){ return(1-t)}
+  
+  scb = list()
+  scb[["time"]] = survfit$time[indexLimits[1]:indexLimits[2]]
+  scb[["surv"]] = survfit$surv[indexLimits[1]:indexLimits[2]]
+  scb[["upper"]] = scb$surv + 0.025
+  scb[["lower"]] = scb$surv - 0.025
+  
+  results = calculateStatistics(scb, survfit, indexLimits, survivalfunction)
+  
+  stopifnot(!is.na(results[["coverage"]]))
+  stopifnot(results[["coverage"]] == 0)
+  
+  stopifnot(!is.na(results[["enclosedArea"]]))
+  stopifnot(!is.na(results[["width"]]))
+  
+  print(results)
 }
 
 # test function generateAllRandomSamples

@@ -102,7 +102,6 @@ calculateClassicalResultsForOneSample <- function(sample, globalTimeInterval, tr
   
   return(lapply(scbList, calculateStatistics, kmEstimator = sample.survfit,
                 indexLimitsForStatistics = indexLimitsForStatistics, 
-                globalTimeInterval = globalTimeInterval,
                 trueSurvivalFunction = trueSurvivalFunction))
 }
 
@@ -114,7 +113,7 @@ calculateClassicalResultsForOneSample <- function(sample, globalTimeInterval, tr
 # 2. what to do if m2 = 100 because z_j+1-z_j is not defined then
 # 3. why can indexlimits exceed scbs limits?
 # this was observed when hall-wellner dropped the 2 last samples. but the last one wasn't censored...
-calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, globalTimeInterval, trueSurvivalFunction)
+calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, trueSurvivalFunction)
 {
   indexOffset = which(kmEstimator$time == scb$time[1])
   
@@ -290,4 +289,36 @@ setUpResultsList <- function()
                          "proposed-III",
                          "transformed-new")
   return(resultsList)
+}
+
+
+reorderResults <- function(resultsByCase, censoringRateAsParameter)
+{
+  coverage = list()
+  for(scbName in classicalScbNames)
+  {
+    coverage[[scbName]] = sapply(resultsByCase, "[[", scbName)["coverage",]
+  }
+  
+  enclosedArea = list()
+  for(scbName in classicalScbNames)
+  {
+    enclosedArea[[scbName]] = sapply(resultsByCase, "[[", scbName)["enclosedArea",]
+  }
+  
+  width = list()
+  for(scbName in classicalScbNames)
+  {
+    width[[scbName]] = sapply(resultsByCase, "[[", scbName)["width",]
+  }
+  
+  if(censoringRateAsParameter)
+  {
+    # TODO: make sure that censoring rates are written as array
+    censoringrates = sapply(resultsByCase, "[[", "censoringrate")
+    return(c(censoringrates = censoringrates, coverage = coverage, enclosedArea = enclosedArea, width = width))
+  }
+  
+  caseParameters = sapply(resultsByCase, "[[", "caseParameter")
+  return(c(caseParameters = caseParameters, coverage = coverage, enclosedArea = enclosedArea, width = width))
 }

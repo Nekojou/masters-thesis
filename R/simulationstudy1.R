@@ -52,9 +52,9 @@ study1.run <- function()
   # calculate global time interval 
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
   
-  # set up results list
-  #resultsList = setUpResultsList()
-
-  results <<- runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
+  # calculate results 
+  resultsByCase <<- runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
+  
+  resultsByStaistic <<- reorderResults(resultsByCase, TRUE)
   
 }
