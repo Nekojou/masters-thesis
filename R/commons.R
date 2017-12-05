@@ -8,12 +8,22 @@ samplesize=100
 montecarloRepetitions=1000
 confidencelevel=0.05
 
-classicalScbNames = c("hall-wellner",
-                      #"akritas",
-                      "nairs-equal-precision",
-                      "transformed-hall-wellner",
-                      #"transformed-akritas",
-                      "transformed-nairs-equal-precision")
+classicalUntransformedScbNames = c("hall-wellner",
+                                   #"akritas",
+                                   "nairs-equal-precision")
+classicalTransformedScbNames = c("transformed-hall-wellner",
+                                 #"transformed-akritas",
+                                 "transformed-nairs-equal-precision")
+classicalScbNames = c(classicalUntransformedScbNames,
+                      classicalTransformedScbNames)
+
+semiparametricUntransformedScbNames = c("proposed-I",
+                                        "new")
+semiparametricTransformedScbNames = c("proposed-III",
+                                      "transformed-new")
+semiparametricScbNames = c(semiparametricUntransformedScbNames,
+                           semiparametricTransformedScbNames)
+colors = c("blue", "red", "green", "violet", "darkgreen")
 
 # Run the studies for each parameter in variableParameterList
 # by calling the wrapper function applyRunOneCaseStudy
@@ -291,8 +301,11 @@ setUpResultsList <- function()
   return(resultsList)
 }
 
-
-reorderResults <- function(resultsByCase, censoringRateAsParameter)
+# reorder the results list to group results by statistic type and not by case
+# returns a list with following structure
+# list(censoringrates,coverage,enclosedArea,width)
+# where coverage/enclosedArea/width are lists of results for each scb type
+reorderResults <- function(resultsByCase, censoringrateAsParameter)
 {
   coverage = list()
   for(scbName in classicalScbNames)
@@ -312,13 +325,55 @@ reorderResults <- function(resultsByCase, censoringRateAsParameter)
     width[[scbName]] = sapply(resultsByCase, "[[", scbName)["width",]
   }
   
-  if(censoringRateAsParameter)
+  if(censoringrateAsParameter == TRUE)
   {
-    # TODO: make sure that censoring rates are written as array
     censoringrates = sapply(resultsByCase, "[[", "censoringrate")
-    return(c(censoringrates = censoringrates, coverage = coverage, enclosedArea = enclosedArea, width = width))
+    return(list(censoringrates = censoringrates, coverage = coverage, enclosedArea = enclosedArea, width = width))
   }
   
   caseParameters = sapply(resultsByCase, "[[", "caseParameter")
-  return(c(caseParameters = caseParameters, coverage = coverage, enclosedArea = enclosedArea, width = width))
+  return(list(caseParameters = caseParameters, coverage = coverage, enclosedArea = enclosedArea, width = width))
+}
+
+saveResults <- function(resultsByStatistic, studyId)
+{
+  write.table(resultsByStatistic, paste(Sys.Date(), "_study", studyId, "_results.txt", sep = ""))
+}
+
+plotAllResults <- function(resultsByStatistic, plotLimits, censoringrateAsParameter)
+{
+  if(censoringrateAsParameter == TRUE)
+  {
+    x = resultsByStatistic[["censoringrates"]]
+  }
+  else
+  {
+    x = resultsByStatistic[["caseParameters"]]
+  }
+  
+  untransformedNames = c(classicalUntransformedScbNames)
+  generateOnePlot(x, resultsByStatistic[["coverage"]], untransformedNames, 
+                  plotLimits[["coverage"]], "Untransformed Bands", "censoringrate", "ECP")
+  generateOnePlot(x, resultsByStatistic[["estimatedArea"]], untransformedNames, 
+                  plotLimits[["estimatedArea"]], "Untransformed Bands", "censoringrate", "EAEA")
+  generateOnePlot(x, resultsByStatistic[["width"]], untransformedNames, 
+                  plotLimits[["width"]], "Untransformed Bands", "censoringrate", "EAW")
+
+  transformedNames = c(classicalTransformedScbNames)
+  generateOnePlot(x, resultsByStatistic[["coverage"]], transformedNames, 
+                  plotLimits[["coverage"]], "Transformed Bands", "censoringrate", "ECP")
+  generateOnePlot(x, resultsByStatistic[["estimatedArea"]], transformedNames, 
+                  plotLimits[["estimatedArea"]], "Transformed Bands", "censoringrate", "EAEA")
+  generateOnePlot(x, resultsByStatistic[["width"]], transformedNames, 
+                  plotLimits[["width"]], "Transformed Bands", "censoringrate", "EAW")
+}
+
+generateOnePlot <- function(x, listOfY, listOfYNames, yLimits, maintitle, xlabel, ylabel)
+{
+  plot(x=x,y=listOfY[[listOfYNames[[1]]]],type="l",xlab=xlabel,ylab=ylabel,col="blue",ylim=yLimits)
+  for (i in 2:length(listOfY))
+  {
+    lines(x=x,y=listOfY[[listOfYNames[[i]]]],col=colors[i])
+  }
+  title(main=maintitle)
 }

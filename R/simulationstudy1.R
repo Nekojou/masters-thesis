@@ -53,8 +53,15 @@ study1.run <- function()
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
   
   # calculate results 
-  resultsByCase <<- runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
+  resultsByCase = runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
   
-  resultsByStaistic <<- reorderResults(resultsByCase, TRUE)
+  # reorder results to make them plottable
+  resultsByStatistic = reorderResults(resultsByCase, TRUE)
+  
+  saveResults(resultsByStatistic, 1)
+  
+  plotLimits = list(coverage = c(0.8,1.0), estimatedArea = c(0.6,1.1), width = c(0.15,0.35))
+  plotAllResults(resultsByStatistic, plotLimits, TRUE)
+  # TODO: Das GEHT NOCH NCIHT!!!
   
 }
