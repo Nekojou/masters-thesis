@@ -354,16 +354,16 @@ plotAllResults <- function(resultsByStatistic, plotLimits, censoringrateAsParame
   untransformedNames = c(classicalUntransformedScbNames)
   generateOnePlot(x, resultsByStatistic[["coverage"]], untransformedNames, 
                   plotLimits[["coverage"]], "Untransformed Bands", "censoringrate", "ECP")
-  generateOnePlot(x, resultsByStatistic[["estimatedArea"]], untransformedNames, 
-                  plotLimits[["estimatedArea"]], "Untransformed Bands", "censoringrate", "EAEA")
+  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], untransformedNames, 
+                  plotLimits[["enclosedArea"]], "Untransformed Bands", "censoringrate", "EAEA")
   generateOnePlot(x, resultsByStatistic[["width"]], untransformedNames, 
                   plotLimits[["width"]], "Untransformed Bands", "censoringrate", "EAW")
 
   transformedNames = c(classicalTransformedScbNames)
   generateOnePlot(x, resultsByStatistic[["coverage"]], transformedNames, 
                   plotLimits[["coverage"]], "Transformed Bands", "censoringrate", "ECP")
-  generateOnePlot(x, resultsByStatistic[["estimatedArea"]], transformedNames, 
-                  plotLimits[["estimatedArea"]], "Transformed Bands", "censoringrate", "EAEA")
+  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], transformedNames, 
+                  plotLimits[["enclosedArea"]], "Transformed Bands", "censoringrate", "EAEA")
   generateOnePlot(x, resultsByStatistic[["width"]], transformedNames, 
                   plotLimits[["width"]], "Transformed Bands", "censoringrate", "EAW")
 }
@@ -371,9 +371,10 @@ plotAllResults <- function(resultsByStatistic, plotLimits, censoringrateAsParame
 generateOnePlot <- function(x, listOfY, listOfYNames, yLimits, maintitle, xlabel, ylabel)
 {
   plot(x=x,y=listOfY[[listOfYNames[[1]]]],type="l",xlab=xlabel,ylab=ylabel,col="blue",ylim=yLimits)
-  for (i in 2:length(listOfY))
+  for (i in 2:length(listOfYNames))
   {
     lines(x=x,y=listOfY[[listOfYNames[[i]]]],col=colors[i])
   }
   title(main=maintitle)
+  #legend("topleft",listOfYNames,col=colors) # Does not display color
 }
