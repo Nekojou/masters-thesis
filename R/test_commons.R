@@ -227,27 +227,6 @@ test.commons.calculateIndexLimitsForStatistics <- function()
   stopifnot(indexLimits[2] == 89)
 }
 
-# test function setUpResultsList
-# return value of function should be a list of size 10 with empty data sets inside
-test.commons.setUpResultsList <- function()
-{
-  resultsList = setUpResultsList()
-  
-  stopifnot(typeof(resultsList) == "list")
-  stopifnot(length(resultsList) == 10)
-  stopifnot(names(resultsList) == c("hall-wellner",
-                                    "nairs-equal-precision",
-                                    "akritas",
-                                    "proposed-I",
-                                    "new",
-                                    "transformed-hall-wellner",
-                                    "transformed-nairs-equal-precision",
-                                    "transformed-akritas",
-                                    "proposed-III",
-                                    "transformed-new"))
-  #ToDo: maybe test emptyness of datasets and their type
-}
-
 # function to run all tests listed in functionnames
 test.commons.runAll <- function()
 {
@@ -264,8 +243,7 @@ test.commons.runAll <- function()
                     "maxUncensoredZ", 
                     "minUncensoredZ", 
                     "calculateGlobalTimeInterval",
-                    "calculateIndexLimitsForStatistics",
-                    "setUpResultsList")
+                    "calculateIndexLimitsForStatistics")
   
   print("Run tests for commons: ")
   for(fi in functionnames)

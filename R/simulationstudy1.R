@@ -10,6 +10,9 @@ study1.beta2 = 4.5
 study1.numberOfCases = 10
 study1.alpha2List = c(seq(1.1,5.5,length.out=study1.numberOfCases))
 
+# variables for plotting
+study1.plotLimits = list(coverage = c(0.8,1.0), enclosedArea = c(0.6,1.1), width = c(0.15,0.35))
+
 # Generates random sample of (Z,delta) from X,Y~weibull 
 # depending on input parameter alpha2
 study1.generateRandomSample <- function(alpha2, samplesize=100)
@@ -47,7 +50,7 @@ study1.run <- function()
 {
   
   # generate all samples
-  allSamples = generateAllRandomSamples(study1.generateRandomSample, study1.alpha2List)
+  allSamples = generateAllRandomSamples(study1.generateRandomSample, study1.alpha2List, 100)
   
   # calculate global time interval 
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
@@ -60,7 +63,6 @@ study1.run <- function()
   
   saveResults(resultsByStatistic, 1)
   
-  plotLimits = list(coverage = c(0.8,1.0), enclosedArea = c(0.6,1.1), width = c(0.15,0.35))
-  plotAllResults(resultsByStatistic, plotLimits, TRUE)
+  plotAllResults(resultsByStatistic, study1.plotLimits, TRUE)
   
 }

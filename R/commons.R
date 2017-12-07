@@ -275,32 +275,6 @@ calculateIndexLimitsForStatistics<-function(sample,globalTimeInterval)
   return(c(m1,m2))
 }
 
-# generate empty datasets for results for each scb type
-# define a list to store all results
-# and give names to the list elements
-setUpResultsList <- function()
-{
-  resultsList = replicate(n = 10,
-                          expr = {data.frame(censoringrateOrParameter=double(),
-                                    ecp=double(),
-                                    eaea=double(),
-                                    eaw=double(),
-                                    stringsAsFactors=FALSE)},
-                          simplify = FALSE)
-
-  names(resultsList) = c("hall-wellner",
-                         "nairs-equal-precision",
-                         "akritas",
-                         "proposed-I",
-                         "new",
-                         "transformed-hall-wellner",
-                         "transformed-nairs-equal-precision",
-                         "transformed-akritas",
-                         "proposed-III",
-                         "transformed-new")
-  return(resultsList)
-}
-
 # reorder the results list to group results by statistic type and not by case
 # returns a list with following structure
 # list(censoringrates,coverage,enclosedArea,width)
@@ -345,27 +319,29 @@ plotAllResults <- function(resultsByStatistic, plotLimits, censoringrateAsParame
   if(censoringrateAsParameter == TRUE)
   {
     x = resultsByStatistic[["censoringrates"]]
+    xLabel = "censoringrate"
   }
   else
   {
     x = resultsByStatistic[["caseParameters"]]
+    xLabel = "caseParameter"
   }
   
   untransformedNames = c(classicalUntransformedScbNames)
   generateOnePlot(x, resultsByStatistic[["coverage"]], untransformedNames, 
-                  plotLimits[["coverage"]], "Untransformed Bands", "censoringrate", "ECP")
+                  plotLimits[["coverage"]], "Untransformed Bands", xLabel, "ECP")
   generateOnePlot(x, resultsByStatistic[["enclosedArea"]], untransformedNames, 
-                  plotLimits[["enclosedArea"]], "Untransformed Bands", "censoringrate", "EAEA")
+                  plotLimits[["enclosedArea"]], "Untransformed Bands", xLabel, "EAEA")
   generateOnePlot(x, resultsByStatistic[["width"]], untransformedNames, 
-                  plotLimits[["width"]], "Untransformed Bands", "censoringrate", "EAW")
+                  plotLimits[["width"]], "Untransformed Bands", xLabel, "EAW")
 
   transformedNames = c(classicalTransformedScbNames)
   generateOnePlot(x, resultsByStatistic[["coverage"]], transformedNames, 
-                  plotLimits[["coverage"]], "Transformed Bands", "censoringrate", "ECP")
+                  plotLimits[["coverage"]], "Transformed Bands", xLabel, "ECP")
   generateOnePlot(x, resultsByStatistic[["enclosedArea"]], transformedNames, 
-                  plotLimits[["enclosedArea"]], "Transformed Bands", "censoringrate", "EAEA")
+                  plotLimits[["enclosedArea"]], "Transformed Bands", xLabel, "EAEA")
   generateOnePlot(x, resultsByStatistic[["width"]], transformedNames, 
-                  plotLimits[["width"]], "Transformed Bands", "censoringrate", "EAW")
+                  plotLimits[["width"]], "Transformed Bands", xLabel, "EAW")
 }
 
 generateOnePlot <- function(x, listOfY, listOfYNames, yLimits, maintitle, xlabel, ylabel)
