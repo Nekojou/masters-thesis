@@ -14,18 +14,12 @@ test.commons.runOneCaseStudy <- function()
 {
 }
 
-test.commons.calculateResultsForClassicalScbs <- function()
-{
-
-}
-
 test.commons.applyRowMeans <- function()
 {
 }
 
-test.commons.calculateClassicalResultsForOneSample <- function()
+test.commons.calculateResultsForOneSample <- function()
 {
-
 }
 
 # tests function calculateStatistics
@@ -227,15 +221,89 @@ test.commons.calculateIndexLimitsForStatistics <- function()
   stopifnot(indexLimits[2] == 89)
 }
 
+# test function reorderResults
+# generates random resultsByCase
+# and tests if they reordered results have the correct format
+test.commons.reorderResults <- function(resultsByCase)
+{
+  subList = list()
+  subList[["caseParameter"]] = 1
+  subList[["censoringrate"]] = 0.2
+  for(scbName in scbNames)
+  {
+    subList[[scbName]] = c(coverage=1, enclosedArea=2, width=3)
+  }
+
+  resultsByCase = list(subList)
+  
+  resultsByStatistic = reorderResults(resultsByCase)
+  
+  stopifnot(resultsByStatistic[["caseParameter"]] == c(1))
+  stopifnot(resultsByStatistic[["censoringrate"]] == c(0.2))
+  for(scbName in scbNames)
+  {
+    stopifnot(resultsByStatistic[["coverage"]][[scbName]] == c(1))
+    stopifnot(resultsByStatistic[["enclosedArea"]][[scbName]] == c(2))
+    stopifnot(resultsByStatistic[["width"]][[scbName]] == c(3))
+  }
+}
+
+# test function saveResults and loadResults
+# generates random data, saves it to a file
+# then loads the same data again and compares it
+# after that the temporary file is removed
+test.commons.saveAndLoadResults <- function(resultsByStatistic, studyId)
+{
+  resultsByStatistic = list()
+  resultsByStatistic[["censoringrate"]] = rnorm(10)
+  resultsByStatistic[["caseParameter"]] = rnorm(10)
+  
+  for (type in statisticTypes)
+  {
+    subList = list()
+    for (name in scbNames)
+    {
+      subList[[name]] = rnorm(10)
+    }
+    resultsByStatistic[[type]] = subList
+  }
+  
+  saveResults(resultsByStatistic, 99)
+  loadedResults = loadResults(paste(Sys.Date(), "study99_results.txt", sep="_"))
+  
+  stopifnot(all(floatCompare(resultsByStatistic[["censoringrate"]], loadedResults[["censoringrate"]])))
+  stopifnot(all(floatCompare(resultsByStatistic[["caseParameter"]], loadedResults[["caseParameter"]])))
+  
+  for (type in statisticTypes)
+  {
+    for (name in scbNames)
+    {
+      stopifnot(all(floatCompare(resultsByStatistic[[type]][[name]], loadedResults[[type]][[name]])))
+    }
+  }
+  
+  invisible(file.remove(paste(Sys.Date(), "study99_results.txt", sep="_")))
+}
+
+# test function floatCompare
+# tests two small floats to be equal 
+# and two unequal numbers to be unequal
+test.commons.floatCompare <- function()
+{
+  x1 = 0.00000001
+  x2 = 0.00000001
+  stopifnot(floatCompare(x1, x2) == TRUE)
+  stopifnot(floatCompare(1, 2) == FALSE)
+}
+
 # function to run all tests listed in functionnames
 test.commons.runAll <- function()
 {
   functionnames = c("runAllStudyCases",
                     "applyRunOneCaseStudy",
                     "runOneCaseStudy",
-                    "calculateResultsForClassicalScbs",
                     "applyRowMeans",
-                    "calculateClassicalResultsForOneSample",
+                    "calculateResultsForOneSample",
                     "calculateStatistics",
                     "generateAllRandomSamples",
                     "generateBootstrapSample",
@@ -243,7 +311,10 @@ test.commons.runAll <- function()
                     "maxUncensoredZ", 
                     "minUncensoredZ", 
                     "calculateGlobalTimeInterval",
-                    "calculateIndexLimitsForStatistics")
+                    "calculateIndexLimitsForStatistics",
+                    "reorderResults",
+                    "saveAndLoadResults",
+                    "floatCompare")
   
   print("Run tests for commons: ")
   for(fi in functionnames)

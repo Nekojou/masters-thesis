@@ -59,10 +59,17 @@ study1.run <- function()
   resultsByCase = runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
   
   # reorder results to make them plottable
-  resultsByStatistic = reorderResults(resultsByCase, TRUE)
+  resultsByStatistic = reorderResults(resultsByCase)
   
   saveResults(resultsByStatistic, 1)
   
   plotAllResults(resultsByStatistic, study1.plotLimits, TRUE)
   
+}
+
+study1.loadAndPlotResults <- function(filename)
+{
+  resultsByStatistic = loadResults(filename)
+  
+  plotAllResults(resultsByStatistic, study1.plotLimits, TRUE)
 }

@@ -8,22 +8,28 @@ samplesize=100
 montecarloRepetitions=1000
 confidencelevel=0.05
 
-classicalUntransformedScbNames = c("hall-wellner",
-                                   #"akritas",
-                                   "nairs-equal-precision")
-classicalTransformedScbNames = c("transformed-hall-wellner",
-                                 #"transformed-akritas",
-                                 "transformed-nairs-equal-precision")
-classicalScbNames = c(classicalUntransformedScbNames,
-                      classicalTransformedScbNames)
+statisticTypes = c("coverage", "enclosedArea", "width")
 
-semiparametricUntransformedScbNames = c("proposed-I",
-                                        "new")
-semiparametricTransformedScbNames = c("proposed-III",
-                                      "transformed-new")
-semiparametricScbNames = c(semiparametricUntransformedScbNames,
-                           semiparametricTransformedScbNames)
-colors = c("blue", "red", "green", "violet", "darkgreen")
+untransformedScbNames = c("hall_wellner"
+                          #,"akritas",
+                          ,"nairs_equal_precision"
+                          #,"proposed_I",
+                          #,"proposed_II",
+                          #,"new"
+                          )
+transformedScbNames = c("transformed_hall_wellner"
+                        #,"transformed_akritas",
+                        ,"transformed_nairs_equal_precision"
+                        #,"proposed_III",
+                        #,"proposed_IV",
+                        #,"transformed_new"
+                        )
+scbNames = c(untransformedScbNames,transformedScbNames)
+
+colors = c("blue", "green", "orange", "violet", "darkgreen", "red")
+
+# load functions to calculate the different scbs
+source("commons_calculateScbs.R")
 
 # Run the studies for each parameter in variableParameterList
 # by calling the wrapper function applyRunOneCaseStudy
@@ -31,7 +37,8 @@ runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterv
 {
   allResultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
                             variableParameterList = variableParameterList,
-                            allSamples = allSamples, globalTimeInterval = globalTimeInterval,
+                            allSamples = allSamples, 
+                            globalTimeInterval = globalTimeInterval,
                             trueSurvivalFunction = trueSurvivalFunction)
   
   # TODO: reorderResults(allResultsByCase)
@@ -47,37 +54,24 @@ applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, g
 }
 
 # Runs the study for one specific case parameter
-# Calculates the restults for all types of scbs
+# Calculates empirical coverage probability,
+# estimated average enclosed area and 
+# estimated average width 
+# for all scb types based on montecarlo simulations
 # groups results together in list with 
 # caseParameter and censoringrate
 runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction)
 {
   censoringrate = mean(sapply(caseSamples, calculateCensoringRate))
   
-  resultsFromClassicalScbs = calculateResultsForClassicalScbs(caseSamples, globalTimeInterval, trueSurvivalFunction)
-  
-  resultsFromSubramanianScbs = list("subramanian")
-  
-  resultsFromNewScbs = list("new")
-  
-  return(c(caseParameter = caseParameter, censoringrate = censoringrate, resultsFromClassicalScbs, resultsFromSubramanianScbs, resultsFromNewScbs))
-}
-
-# Calculates empirical coverage probability,
-# estimated average enclosed area and 
-# estimated average width 
-# for the 6 classical scb types based on 
-# the Kaplan-Meier estimator
-calculateResultsForClassicalScbs <- function(monteCarloSamples, globalTimeInterval, trueSurvivalFunction)
-{
-  coveragesEnclosedAreasWidths = lapply(monteCarloSamples, calculateClassicalResultsForOneSample, 
+  coveragesEnclosedAreasWidths = lapply(caseSamples, calculateResultsForOneSample, 
                                         globalTimeInterval = globalTimeInterval, 
                                         trueSurvivalFunction = trueSurvivalFunction)
   
-  resultsForClassicalSCBs = lapply(classicalScbNames, applyRowMeans, coveragesEnclosedAreasWidths = coveragesEnclosedAreasWidths)
-  names(resultsForClassicalSCBs) = classicalScbNames
+  results = lapply(scbNames, applyRowMeans, coveragesEnclosedAreasWidths = coveragesEnclosedAreasWidths)
+  names(results) = scbNames
   
-  return(resultsForClassicalSCBs)
+  return(c(caseParameter = caseParameter, censoringrate = censoringrate, results))
 }
 
 # This function is a helper function to make is possible to use lapply
@@ -87,47 +81,49 @@ applyRowMeans <- function(name, coveragesEnclosedAreasWidths)
   return(rowMeans(sapply(coveragesEnclosedAreasWidths, "[[", name)))
 }
 
-# Calculates the classical scbs for one specific sample.
+# Calculates the scbs for one specific sample.
 # Returns a list of results, containing
 # coverage (0 or 1), enclosed area
 # and width of the scb for each type
-calculateClassicalResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction)
+calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction)
 {
   # calculate Kaplan-Meier estimator
   sample.survfit = survfit(Surv(sample$Z, sample$delta)~1)
   
   scbList = list()
-  #TODO; AKRITAS?
-  # untransformed bands based on KM
-  scbList[["hall-wellner"]]          = km.ci(sample.survfit, conf.level=1-confidencelevel, method="hall-wellner")
-  scbList[["nairs-equal-precision"]] = km.ci(sample.survfit, conf.level=1-confidencelevel, method="epband")
-  #scb.akritas=km.ci(sample.survfit, conf.level=1-confidencelevel, method="akritas")
-  
-  # transformed bands based on KM
-  scbList[["transformed-hall-wellner"]]          = km.ci(sample.survfit, conf.level=1-confidencelevel, method="loghall")
-  scbList[["transformed-nairs-equal-precision"]] = km.ci(sample.survfit, conf.level=1-confidencelevel, method="logep")
-  #scb.akritas.transformed=km.ci(sample.survfit, conf.level=1-confidencelevel, method="logakritas")
-  
+  # untransformed bands
+  scbList[["hall_wellner"]]           = calculateScb_hall_wellner(sample.survfit)
+  scbList[["akritas"]]                = calculateScb_akritas(sample.survfit)
+  scbList[["nairs_equal_precision"]]  = calculateScb_nairs_equal_precision(sample.survfit)
+  scbList[["proposed_I"]]             = calculateScb_proposed_I(sample.survfit)
+  scbList[["proposed_II"]]            = calculateScb_proposed_II(sample.survfit)
+  scbList[["new"]]                    = calculateScb_new(sample.survfit)
+
+  # transformed bands
+  scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.survfit)
+  scbList[["akritas"]]                            = calculateScb_akritas(sample.survfit)
+  scbList[["transformed_nairs_equal_precision"]]  = calculateScb_transformed_nairs_equal_precision(sample.survfit)
+  scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.survfit)
+  scbList[["proposed_IV"]]                        = calculateScb_proposed_IV(sample.survfit)
+  scbList[["transformed_new"]]                    = calculateScb_transformed_new(sample.survfit)
+
   indexLimitsForStatistics = calculateIndexLimitsForStatistics(sample, globalTimeInterval)
   
-  return(lapply(scbList, calculateStatistics, kmEstimator = sample.survfit,
+  return(lapply(scbList, calculateStatistics, estimator = sample.survfit,
                 indexLimitsForStatistics = indexLimitsForStatistics, 
                 trueSurvivalFunction = trueSurvivalFunction))
 }
 
 # Calculates the coverage, enclosed area and width 
 # for a given scb within the given index limits
-# TODO: open questions:
-# 1. for coverage: is it correct to only evaluate at discrete times? 
-# and only for m1:m2 and not t1:t2 (because upper and lower might not be defined there)?
-# 2. what to do if m2 = 100 because z_j+1-z_j is not defined then
-# 3. why can indexlimits exceed scbs limits?
-# this was observed when hall-wellner dropped the 2 last samples. but the last one wasn't censored...
-calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, trueSurvivalFunction)
+# TODO: why can indexlimits exceed scbs limits?
+# this was observed when hall_wellner dropped the 2 last samples. but the last one wasn't censored...
+calculateStatistics <- function(scb, estimator, indexLimitsForStatistics, trueSurvivalFunction)
 {
-  indexOffset = which(kmEstimator$time == scb$time[1])
+  indexOffset = which(estimator$time == scb$time[1])
   
   # I thought this was not necessary, but it happened that the indizes where out of range of the scb
+  # TODO: Might not be necessary anymore when KM based estimators are manually calculated
   if(indexLimitsForStatistics[1] < indexOffset)
   {
     indexLimitsForStatistics[1] = indexOffset
@@ -137,10 +133,25 @@ calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, true
     indexLimitsForStatistics[2] = (length(scb$time) + indexOffset - 1)
   }
   
+  coverage = calculateCoverage(scb, estimator, indexLimitsForStatistics, indexOffset, trueSurvivalFunction)
+  
+  enclosedArea = calculateEnclosedArea(scb, estimator, indexLimitsForStatistics, indexOffset)
+
+  width = calculateWidth(scb, estimator, indexLimitsForStatistics, indexOffset)
+  
+  return(c(coverage=coverage, enclosedArea=enclosedArea, width=width))
+}
+
+# function to check if an SCB completely includes the true survival function
+# returns 1 if so, and 0 if not
+# TODO: calculate on t1,t2 not m1,m2? Might be possible when KM based estimators are manually calculated
+# TODO: Do not evalutae on descrete times only but develop a strategy to check this correctly
+calculateCoverage <- function(scb, estimator, indexLimitsForStatistics, indexOffset, trueSurvivalFunction)
+{
   indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
   indexRangeForScb = indexRange + (1 - indexOffset)
   
-  trueSurvivalFunctionData = trueSurvivalFunction(kmEstimator$time[indexRange])
+  trueSurvivalFunctionData = trueSurvivalFunction(estimator$time[indexRange])
   
   coverage = 0
   if(all(scb$lower[indexRangeForScb]<=trueSurvivalFunctionData 
@@ -149,7 +160,16 @@ calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, true
     coverage = 1
   }
   
+  return(coverage)
+}
+
+# calculate the enclosed area of a specific scb
+# TODO: what to do if m2 = 100 because z_j+1-z_j is not defined then
+# and this automatically makes the enclosed area rationally smaller, because one square less is included
+calculateEnclosedArea <- function(scb, estimator, indexLimitsForStatistics, indexOffset)
+{
   indexRange = indexLimitsForStatistics[1]:(indexLimitsForStatistics[2]+1)
+  indexRangeForScb = indexLimitsForStatistics[1]:indexLimitsForStatistics[2] + (1 - indexOffset)
   if(max(indexRange) > samplesize)
   {
     indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
@@ -159,24 +179,25 @@ calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, true
   bandwidths = scb$upper[indexRangeForScb] - scb$lower[indexRangeForScb]
   
   enclosedArea = sum(
-    diff(kmEstimator$time[indexRange], 1)
+    diff(estimator$time[indexRange], 1)
     * bandwidths)
   
-#  if(is.na(enclosedArea))
-#  {
-#    print("d")
-#  }
-  
+  return(enclosedArea)
+}
+
+# calculate width of a specific scb
+calculateWidth <- function(scb, estimator, indexLimitsForStatistics, indexOffset)
+{
   indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
   indexRangeForScb = indexRange + (1 - indexOffset)
-  survforDiff = kmEstimator$surv[indexRange]
+  survforDiff = estimator$surv[indexRange]
   if(min(indexRange) == 1)
   {
     survforDiff = c(1, survforDiff)
   }
   else
   {
-    survforDiff = c(kmEstimator$surv[indexLimitsForStatistics[1]-1], survforDiff)
+    survforDiff = c(estimator$surv[indexLimitsForStatistics[1]-1], survforDiff)
   }
   
   bandwidths = scb$upper[indexRangeForScb] - scb$lower[indexRangeForScb]
@@ -185,24 +206,14 @@ calculateStatistics <- function(scb, kmEstimator, indexLimitsForStatistics, true
     diff(-survforDiff, 1)
     * bandwidths)
   
-#  if(is.na(width))
-#  {
-#    print("d")
-#  }
-  
-  return(c(coverage=coverage, enclosedArea=enclosedArea, width=width))
+  return(width)
 }
-
 
 # TODO: Functions to be transferred:
 # S.estimator2<-function(z,theta.hat){}
 # S.estimator2.t<-function(t,z,theta.hat){}
 # S.estimator3<-function(z,theta.hat){}
 # S.estimator3.t<-function(t,z,theta.hat){}
-# calculateCoverageAndEnclosedAreaAndWidth<-function(scb,globalTimeInterval){}
-# save.ergs<-function(prefix){}
-# load.ergs<-function(prefix){}
-# plot.ergs<-function(prefix){}
 
 
 # generate all samples
@@ -277,36 +288,25 @@ calculateIndexLimitsForStatistics<-function(sample,globalTimeInterval)
 
 # reorder the results list to group results by statistic type and not by case
 # returns a list with following structure
-# list(censoringrates,coverage,enclosedArea,width)
+# list(censoringrate,caseParameter,coverage,enclosedArea,width)
 # where coverage/enclosedArea/width are lists of results for each scb type
-reorderResults <- function(resultsByCase, censoringrateAsParameter)
+reorderResults <- function(resultsByCase)
 {
   coverage = list()
-  for(scbName in classicalScbNames)
+  enclosedArea = list()
+  width = list()
+  
+  for(scbName in scbNames)
   {
     coverage[[scbName]] = sapply(resultsByCase, "[[", scbName)["coverage",]
-  }
-  
-  enclosedArea = list()
-  for(scbName in classicalScbNames)
-  {
     enclosedArea[[scbName]] = sapply(resultsByCase, "[[", scbName)["enclosedArea",]
-  }
-  
-  width = list()
-  for(scbName in classicalScbNames)
-  {
     width[[scbName]] = sapply(resultsByCase, "[[", scbName)["width",]
   }
   
-  if(censoringrateAsParameter == TRUE)
-  {
-    censoringrates = sapply(resultsByCase, "[[", "censoringrate")
-    return(list(censoringrates = censoringrates, coverage = coverage, enclosedArea = enclosedArea, width = width))
-  }
-  
-  caseParameters = sapply(resultsByCase, "[[", "caseParameter")
-  return(list(caseParameters = caseParameters, coverage = coverage, enclosedArea = enclosedArea, width = width))
+  censoringrate = sapply(resultsByCase, "[[", "censoringrate")
+  caseParameter = sapply(resultsByCase, "[[", "caseParameter")
+  return(list(censoringrate = censoringrate, caseParameter = caseParameter, coverage = coverage, enclosedArea = enclosedArea, width = width))
+
 }
 
 saveResults <- function(resultsByStatistic, studyId)
@@ -314,33 +314,52 @@ saveResults <- function(resultsByStatistic, studyId)
   write.table(resultsByStatistic, paste(Sys.Date(), "_study", studyId, "_results.txt", sep = ""))
 }
 
+loadResults <- function(filename)
+{
+  resultsInOtherFormat = read.table(filename)
+  
+  resultsByStatistic = list()
+  resultsByStatistic[["censoringrate"]] = resultsInOtherFormat$censoringrate
+  resultsByStatistic[["caseParameter"]] = resultsInOtherFormat$caseParameter
+  
+  for (type in statisticTypes)
+  {
+    subList = list()
+    for (name in scbNames)
+    {
+      subList[[name]] = resultsInOtherFormat[[gsub("_", ".", paste(type,name,sep = "."))]]
+    }
+    resultsByStatistic[[type]] = subList
+  }
+  
+  return(resultsByStatistic)
+}
+
 plotAllResults <- function(resultsByStatistic, plotLimits, censoringrateAsParameter)
 {
   if(censoringrateAsParameter == TRUE)
   {
-    x = resultsByStatistic[["censoringrates"]]
+    x = resultsByStatistic[["censoringrate"]]
     xLabel = "censoringrate"
   }
   else
   {
-    x = resultsByStatistic[["caseParameters"]]
+    x = resultsByStatistic[["caseParameter"]]
     xLabel = "caseParameter"
   }
   
-  untransformedNames = c(classicalUntransformedScbNames)
-  generateOnePlot(x, resultsByStatistic[["coverage"]], untransformedNames, 
+  generateOnePlot(x, resultsByStatistic[["coverage"]], untransformedScbNames, 
                   plotLimits[["coverage"]], "Untransformed Bands", xLabel, "ECP")
-  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], untransformedNames, 
+  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], untransformedScbNames, 
                   plotLimits[["enclosedArea"]], "Untransformed Bands", xLabel, "EAEA")
-  generateOnePlot(x, resultsByStatistic[["width"]], untransformedNames, 
+  generateOnePlot(x, resultsByStatistic[["width"]], untransformedScbNames, 
                   plotLimits[["width"]], "Untransformed Bands", xLabel, "EAW")
 
-  transformedNames = c(classicalTransformedScbNames)
-  generateOnePlot(x, resultsByStatistic[["coverage"]], transformedNames, 
+  generateOnePlot(x, resultsByStatistic[["coverage"]], transformedScbNames, 
                   plotLimits[["coverage"]], "Transformed Bands", xLabel, "ECP")
-  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], transformedNames, 
+  generateOnePlot(x, resultsByStatistic[["enclosedArea"]], transformedScbNames, 
                   plotLimits[["enclosedArea"]], "Transformed Bands", xLabel, "EAEA")
-  generateOnePlot(x, resultsByStatistic[["width"]], transformedNames, 
+  generateOnePlot(x, resultsByStatistic[["width"]], transformedScbNames, 
                   plotLimits[["width"]], "Transformed Bands", xLabel, "EAW")
 }
 
@@ -353,4 +372,9 @@ generateOnePlot <- function(x, listOfY, listOfYNames, yLimits, maintitle, xlabel
   }
   title(main=maintitle)
   #legend("topleft",listOfYNames,col=colors) # Does not display color
+}
+
+floatCompare <- function(in1, in2)
+{
+  return(abs(in1-in2) <= 1e-10)
 }
