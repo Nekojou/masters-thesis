@@ -28,18 +28,22 @@ scbNames = c(untransformedScbNames,transformedScbNames)
 
 colors = c("blue", "green", "orange", "violet", "darkgreen", "red")
 
+# load functions to calculate the different estimators for S
+source("commons_estimators.R")
+
 # load functions to calculate the different scbs
 source("commons_calculateScbs.R")
 
 # Run the studies for each parameter in variableParameterList
 # by calling the wrapper function applyRunOneCaseStudy
-runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction)
+runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction, modelFunction)
 {
   allResultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
                             variableParameterList = variableParameterList,
                             allSamples = allSamples, 
                             globalTimeInterval = globalTimeInterval,
-                            trueSurvivalFunction = trueSurvivalFunction)
+                            trueSurvivalFunction = trueSurvivalFunction,
+                            modelFunction = modelFunction)
   
   # TODO: reorderResults(allResultsByCase)
   return(allResultsByCase)
@@ -47,10 +51,10 @@ runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterv
 
 # This function is a helper function to make the call of runOneCaseStudy possible with lapply
 # the main problem is that both variableParameterList as well as allSamples need to be variated
-applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, globalTimeInterval, trueSurvivalFunction)
+applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, globalTimeInterval, trueSurvivalFunction, modelFunction)
 {
   return(runOneCaseStudy(parameter, allSamples[[which(variableParameterList == parameter)]], 
-                         globalTimeInterval, trueSurvivalFunction))
+                         globalTimeInterval, trueSurvivalFunction, modelFunction))
 }
 
 # Runs the study for one specific case parameter
@@ -60,13 +64,14 @@ applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, g
 # for all scb types based on montecarlo simulations
 # groups results together in list with 
 # caseParameter and censoringrate
-runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction)
+runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction, modelFunction)
 {
   censoringrate = mean(sapply(caseSamples, calculateCensoringRate))
   
   coveragesEnclosedAreasWidths = lapply(caseSamples, calculateResultsForOneSample, 
                                         globalTimeInterval = globalTimeInterval, 
-                                        trueSurvivalFunction = trueSurvivalFunction)
+                                        trueSurvivalFunction = trueSurvivalFunction,
+                                        modelFunction = modelFunction)
   
   results = lapply(scbNames, applyRowMeans, coveragesEnclosedAreasWidths = coveragesEnclosedAreasWidths)
   names(results) = scbNames
@@ -85,31 +90,37 @@ applyRowMeans <- function(name, coveragesEnclosedAreasWidths)
 # Returns a list of results, containing
 # coverage (0 or 1), enclosed area
 # and width of the scb for each type
-calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction)
+calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction, modelFunction)
 {
   # calculate Kaplan-Meier estimator
-  sample.survfit = survfit(Surv(sample$Z, sample$delta)~1)
+  sample.kaplan_meier_estimator = survfit(Surv(sample$Z, sample$delta)~1)
+  
+  # calculate semiparametric estimators
+  mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction)
+  
+  sample.dikta_2_estimator = estimators.dikta_2(sample, modelFunction, mleTheta)
+  sample.dikta_3_estimator = estimators.dikta_3(sample, modelFunction, mleTheta)
   
   scbList = list()
   # untransformed bands
-  scbList[["hall_wellner"]]           = calculateScb_hall_wellner(sample.survfit)
-  scbList[["akritas"]]                = calculateScb_akritas(sample.survfit)
-  scbList[["nairs_equal_precision"]]  = calculateScb_nairs_equal_precision(sample.survfit)
-  scbList[["proposed_I"]]             = calculateScb_proposed_I(sample.survfit)
-  scbList[["proposed_II"]]            = calculateScb_proposed_II(sample.survfit)
-  scbList[["new"]]                    = calculateScb_new(sample.survfit)
+  scbList[["hall_wellner"]]           = calculateScb_hall_wellner(sample.kaplan_meier_estimator)
+  scbList[["akritas"]]                = calculateScb_akritas(sample.kaplan_meier_estimator)
+  scbList[["nairs_equal_precision"]]  = calculateScb_nairs_equal_precision(sample.kaplan_meier_estimator)
+  scbList[["proposed_I"]]             = calculateScb_proposed_I(sample.dikta_2_estimator)
+  scbList[["proposed_II"]]            = calculateScb_proposed_II(sample.dikta_2_estimator)
+  scbList[["new"]]                    = calculateScb_new(sample.dikta_3_estimator)
 
   # transformed bands
-  scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.survfit)
-  scbList[["akritas"]]                            = calculateScb_akritas(sample.survfit)
-  scbList[["transformed_nairs_equal_precision"]]  = calculateScb_transformed_nairs_equal_precision(sample.survfit)
-  scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.survfit)
-  scbList[["proposed_IV"]]                        = calculateScb_proposed_IV(sample.survfit)
-  scbList[["transformed_new"]]                    = calculateScb_transformed_new(sample.survfit)
+  scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.kaplan_meier_estimator)
+  scbList[["akritas"]]                            = calculateScb_akritas(sample.kaplan_meier_estimator)
+  scbList[["transformed_nairs_equal_precision"]]  = calculateScb_transformed_nairs_equal_precision(sample.kaplan_meier_estimator)
+  scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.dikta_2_estimator)
+  scbList[["proposed_IV"]]                        = calculateScb_proposed_IV(sample.dikta_2_estimator)
+  scbList[["transformed_new"]]                    = calculateScb_transformed_new(sample.dikta_3_estimator)
 
   indexLimitsForStatistics = calculateIndexLimitsForStatistics(sample, globalTimeInterval)
   
-  return(lapply(scbList, calculateStatistics, estimator = sample.survfit,
+  return(lapply(scbList, calculateStatistics,
                 indexLimitsForStatistics = indexLimitsForStatistics, 
                 trueSurvivalFunction = trueSurvivalFunction))
 }
@@ -118,9 +129,9 @@ calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurviva
 # for a given scb within the given index limits
 # TODO: why can indexlimits exceed scbs limits?
 # this was observed when hall_wellner dropped the 2 last samples. but the last one wasn't censored...
-calculateStatistics <- function(scb, estimator, indexLimitsForStatistics, trueSurvivalFunction)
+calculateStatistics <- function(scb, indexLimitsForStatistics, trueSurvivalFunction)
 {
-  indexOffset = which(estimator$time == scb$time[1])
+  indexOffset = which(scb$estimator$time == scb$time[1])
   
   # I thought this was not necessary, but it happened that the indizes where out of range of the scb
   # TODO: Might not be necessary anymore when KM based estimators are manually calculated
@@ -133,11 +144,11 @@ calculateStatistics <- function(scb, estimator, indexLimitsForStatistics, trueSu
     indexLimitsForStatistics[2] = (length(scb$time) + indexOffset - 1)
   }
   
-  coverage = calculateCoverage(scb, estimator, indexLimitsForStatistics, indexOffset, trueSurvivalFunction)
+  coverage = calculateCoverage(scb, scb$estimator, indexLimitsForStatistics, indexOffset, trueSurvivalFunction)
   
-  enclosedArea = calculateEnclosedArea(scb, estimator, indexLimitsForStatistics, indexOffset)
+  enclosedArea = calculateEnclosedArea(scb, scb$estimator, indexLimitsForStatistics, indexOffset)
 
-  width = calculateWidth(scb, estimator, indexLimitsForStatistics, indexOffset)
+  width = calculateWidth(scb, scb$estimator, indexLimitsForStatistics, indexOffset)
   
   return(c(coverage=coverage, enclosedArea=enclosedArea, width=width))
 }
@@ -235,11 +246,11 @@ generateAllRandomSamples <- function(generateRandomSample, variableParameterList
 # Obtain one bootstrap sample from original sample using the two-stage bootstrap method
 # ZStar are generated through classical bootstrap from original Z
 # deltaStar are generated from bernoulli variables 
-# with success parameter modelFunction(ZStar_i, thetaMLE)
-generateBootstrapSample <- function(originalSample, modelFunction, thetaMLE)
+# with success parameter modelFunction(ZStar_i, mleTheta)
+generateBootstrapSample <- function(originalSample, modelFunction, mleTheta)
 {
   ZStar = sample(originalSample$Z, replace = TRUE)
-  deltaStar = sapply(sapply(ZStar, modelFunction, theta=thetaMLE), rbinom, n=1, size=1)
+  deltaStar = sapply(sapply(ZStar, modelFunction, theta=mleTheta), rbinom, n=1, size=1)
   return(data.frame(Z=ZStar, delta=deltaStar))
 }
 
@@ -376,5 +387,5 @@ generateOnePlot <- function(x, listOfY, listOfYNames, yLimits, maintitle, xlabel
 
 floatCompare <- function(in1, in2)
 {
-  return(abs(in1-in2) <= 1e-10)
+  return(abs(in1-in2) <= 1e-8)
 }

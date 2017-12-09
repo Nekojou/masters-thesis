@@ -56,7 +56,9 @@ study1.run <- function()
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
   
   # calculate results 
-  resultsByCase = runAllStudyCases(allSamples, study1.alpha2List, globalTimeInterval, study1.survivalfunction)
+  resultsByCase = runAllStudyCases(allSamples, study1.alpha2List, 
+                                   globalTimeInterval, study1.survivalfunction,
+                                   study1.modelfunction)
   
   # reorder results to make them plottable
   resultsByStatistic = reorderResults(resultsByCase)

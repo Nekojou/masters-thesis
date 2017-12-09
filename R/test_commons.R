@@ -1,6 +1,7 @@
 setwd(dirname(parent.frame(2)$ofile))
 source("commons.R")
 
+source("test_commons_estimators.R")
 
 test.commons.runAllStudyCases <- function()
 {
@@ -41,16 +42,15 @@ test.commons.calculateStatistics <- function()
   scb[["surv"]] = survfit$surv[indexLimits[1]:indexLimits[2]]
   scb[["upper"]] = scb$surv + 0.025
   scb[["lower"]] = scb$surv - 0.025
+  scb[["estimator"]] = survfit
   
-  results = calculateStatistics(scb, survfit, indexLimits, survivalfunction)
+  results = calculateStatistics(scb, indexLimits, survivalfunction)
 
   stopifnot(!is.na(results[["coverage"]]))
   stopifnot(results[["coverage"]] == 1)
   
   stopifnot(!is.na(results[["enclosedArea"]]))
   stopifnot(!is.na(results[["width"]]))
-  
-  print(results)
   
   # test case 2
   #exclude first and last observations
@@ -63,16 +63,15 @@ test.commons.calculateStatistics <- function()
   scb[["surv"]] = survfit$surv[indexLimits[1]:indexLimits[2]]
   scb[["upper"]] = scb$surv + 0.025
   scb[["lower"]] = scb$surv - 0.025
+  scb[["estimator"]] = survfit
   
-  results = calculateStatistics(scb, survfit, indexLimits, survivalfunction)
+  results = calculateStatistics(scb, indexLimits, survivalfunction)
   
   stopifnot(!is.na(results[["coverage"]]))
   stopifnot(results[["coverage"]] == 0)
   
   stopifnot(!is.na(results[["enclosedArea"]]))
   stopifnot(!is.na(results[["width"]]))
-  
-  print(results)
 }
 
 # test function generateAllRandomSamples
@@ -314,7 +313,12 @@ test.commons.runAll <- function()
                     "calculateIndexLimitsForStatistics",
                     "reorderResults",
                     "saveAndLoadResults",
-                    "floatCompare")
+                    "floatCompare",
+                    
+                    "estimators.dikta_2",
+                    "estimators.dikta_3",
+                    "estimators.likelihoodFunction",
+                    "estimators.calculateMaximumLikelihoodEstimator")
   
   print("Run tests for commons: ")
   for(fi in functionnames)
