@@ -1,3 +1,4 @@
+setwd(dirname(parent.frame(2)$ofile))
 # used packages
 library(survival)
 library(km.ci)
@@ -11,18 +12,18 @@ confidencelevel=0.05
 statisticTypes = c("coverage", "enclosedArea", "width")
 
 untransformedScbNames = c("hall_wellner"
-                          #,"akritas",
+                          ,"akritas"
                           ,"nairs_equal_precision"
-                          #,"proposed_I",
-                          #,"proposed_II",
-                          #,"new"
+                          ,"proposed_I"
+                          ,"proposed_II"
+                          ,"new"
                           )
 transformedScbNames = c("transformed_hall_wellner"
-                        #,"transformed_akritas",
+                        ,"transformed_akritas"
                         ,"transformed_nairs_equal_precision"
-                        #,"proposed_III",
-                        #,"proposed_IV",
-                        #,"transformed_new"
+                        ,"proposed_III"
+                        ,"proposed_IV"
+                        ,"transformed_new"
                         )
 scbNames = c(untransformedScbNames,transformedScbNames)
 
@@ -36,14 +37,15 @@ source("commons_calculateScbs.R")
 
 # Run the studies for each parameter in variableParameterList
 # by calling the wrapper function applyRunOneCaseStudy
-runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction, modelFunction)
+runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
   allResultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
                             variableParameterList = variableParameterList,
                             allSamples = allSamples, 
                             globalTimeInterval = globalTimeInterval,
                             trueSurvivalFunction = trueSurvivalFunction,
-                            modelFunction = modelFunction)
+                            modelFunction = modelFunction,
+                            parameterLimits = parameterLimits)
   
   # TODO: reorderResults(allResultsByCase)
   return(allResultsByCase)
@@ -51,10 +53,10 @@ runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterv
 
 # This function is a helper function to make the call of runOneCaseStudy possible with lapply
 # the main problem is that both variableParameterList as well as allSamples need to be variated
-applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, globalTimeInterval, trueSurvivalFunction, modelFunction)
+applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
   return(runOneCaseStudy(parameter, allSamples[[which(variableParameterList == parameter)]], 
-                         globalTimeInterval, trueSurvivalFunction, modelFunction))
+                         globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits))
 }
 
 # Runs the study for one specific case parameter
@@ -64,14 +66,15 @@ applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, g
 # for all scb types based on montecarlo simulations
 # groups results together in list with 
 # caseParameter and censoringrate
-runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction, modelFunction)
+runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
   censoringrate = mean(sapply(caseSamples, calculateCensoringRate))
   
   coveragesEnclosedAreasWidths = lapply(caseSamples, calculateResultsForOneSample, 
                                         globalTimeInterval = globalTimeInterval, 
                                         trueSurvivalFunction = trueSurvivalFunction,
-                                        modelFunction = modelFunction)
+                                        modelFunction = modelFunction,
+                                        parameterLimits = parameterLimits)
   
   results = lapply(scbNames, applyRowMeans, coveragesEnclosedAreasWidths = coveragesEnclosedAreasWidths)
   names(results) = scbNames
@@ -90,13 +93,13 @@ applyRowMeans <- function(name, coveragesEnclosedAreasWidths)
 # Returns a list of results, containing
 # coverage (0 or 1), enclosed area
 # and width of the scb for each type
-calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction, modelFunction)
+calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
   # calculate Kaplan-Meier estimator
   sample.kaplan_meier_estimator = survfit(Surv(sample$Z, sample$delta)~1)
   
   # calculate semiparametric estimators
-  mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction)
+  mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction, parameterLimits)
   
   sample.dikta_2_estimator = estimators.dikta_2(sample, modelFunction, mleTheta)
   sample.dikta_3_estimator = estimators.dikta_3(sample, modelFunction, mleTheta)
@@ -112,7 +115,7 @@ calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurviva
 
   # transformed bands
   scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.kaplan_meier_estimator)
-  scbList[["akritas"]]                            = calculateScb_akritas(sample.kaplan_meier_estimator)
+  scbList[["transformed_akritas"]]                = calculateScb_akritas(sample.kaplan_meier_estimator)
   scbList[["transformed_nairs_equal_precision"]]  = calculateScb_transformed_nairs_equal_precision(sample.kaplan_meier_estimator)
   scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.dikta_2_estimator)
   scbList[["proposed_IV"]]                        = calculateScb_proposed_IV(sample.dikta_2_estimator)
@@ -165,8 +168,10 @@ calculateCoverage <- function(scb, estimator, indexLimitsForStatistics, indexOff
   trueSurvivalFunctionData = trueSurvivalFunction(estimator$time[indexRange])
   
   coverage = 0
-  if(all(scb$lower[indexRangeForScb]<=trueSurvivalFunctionData 
-         && scb$upper[indexRangeForScb]>=trueSurvivalFunctionData))
+  if(all(scb$lower[indexRangeForScb] <= trueSurvivalFunctionData 
+         && scb$upper[indexRangeForScb] >= trueSurvivalFunctionData
+         && scb$lower[indexRangeForScb][1:(length(trueSurvivalFunctionData)-1)]
+                <= trueSurvivalFunctionData[2:length(trueSurvivalFunctionData)]))
   {
     coverage = 1
   }

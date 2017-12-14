@@ -36,20 +36,20 @@ estimators.likelihoodFunction <- function(sample, theta, modelFunction)
   #   print(sample)
   #   print(theta)
   #   print(-1/length(sample$Z) * sum(data$sample*log(R)+(1-sample$delta)*log(1-R)))
-  result = -1/length(sample$Z) * 
+  loglikelihood = 1/length(sample$Z) * 
             sum(sample$delta * log(R) + 
             (1 - sample$delta) * log(1 - R))
-  if(!is.finite(result))
+  if(!is.finite(loglikelihood))
   {
     print("here")
   }
-  return(result)
+  return(-loglikelihood)
 }
 
-estimators.calculateMaximumLikelihoodEstimator <- function(sample, modelFunction)
+estimators.calculateMaximumLikelihoodEstimator <- function(sample, modelFunction, parameterLimits)
 {
   mle = optim(par = c(1,1), fn = estimators.likelihoodFunction,
               sample = sample, modelFunction = modelFunction,
-              lower = c(0.0001, -Inf), upper = c(Inf, Inf), method = "L-BFGS-B")
+              lower = parameterLimits[["lower"]], upper = parameterLimits[["upper"]], method = "L-BFGS-B")
   return(mle$par)
 }

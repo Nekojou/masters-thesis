@@ -10,6 +10,8 @@ study1.beta2 = 4.5
 study1.numberOfCases = 10
 study1.alpha2List = c(seq(1.1,5.5,length.out=study1.numberOfCases))
 
+study1.parameterLimits = list(lower = c(0.0001,-10), upper = c(10,10))
+
 # variables for plotting
 study1.plotLimits = list(coverage = c(0.8,1.0), enclosedArea = c(0.6,1.1), width = c(0.15,0.35))
 
@@ -58,7 +60,7 @@ study1.run <- function()
   # calculate results 
   resultsByCase = runAllStudyCases(allSamples, study1.alpha2List, 
                                    globalTimeInterval, study1.survivalfunction,
-                                   study1.modelfunction)
+                                   study1.modelfunction, study1.parameterLimits)
   
   # reorder results to make them plottable
   resultsByStatistic = reorderResults(resultsByCase)

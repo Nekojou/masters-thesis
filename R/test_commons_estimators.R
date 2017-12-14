@@ -109,5 +109,5 @@ test.commons.estimators.calculateMaximumLikelihoodEstimator <- function()
   print(theta)
   print(mleTheta)
   
-  stopifnot(floatCompare(mleTheta, c(8.387158, 1.340541)))
+  stopifnot(mleTheta == c(8.387158, 1.340541))
 }
