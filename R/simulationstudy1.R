@@ -7,7 +7,7 @@ study1.beta1 = 3
 study1.beta2 = 4.5
 
 # generate variable parameters alpha2
-study1.numberOfCases = 10
+study1.numberOfCases = 2
 study1.alpha2List = c(seq(1.1,5.5,length.out=study1.numberOfCases))
 
 study1.parameterLimits = list(lower = c(0.0001,-10), upper = c(10,10))
@@ -52,15 +52,20 @@ study1.run <- function()
 {
   
   # generate all samples
-  allSamples = generateAllRandomSamples(study1.generateRandomSample, study1.alpha2List, 100)
+  allSamples = generateAllRandomSamples(study1.generateRandomSample, study1.alpha2List, 10)
   
   # calculate global time interval 
   globalTimeInterval = calculateGlobalTimeInterval(allSamples)
   
   # calculate results 
+  nCores = detectCores() - 1
+  cl <- makeCluster(nCores)
+  clusterEvalQ(cl, source("simulationstudy1.R"))
+  
   resultsByStatistic = runAllStudyCases(allSamples, study1.alpha2List, 
                                    globalTimeInterval, study1.survivalfunction,
                                    study1.modelfunction, study1.parameterLimits)
+  stopCluster(cl)
   
   saveResults(resultsByStatistic, 1)
   

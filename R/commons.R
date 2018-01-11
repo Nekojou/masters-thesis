@@ -16,14 +16,16 @@ untransformedScbNames = c("hall_wellner"
                           ,"nairs_equal_precision"
                           ,"proposed_I"
                           ,"proposed_II"
-                          ,"new"
+                          ,"new_proposed_I"
+                          ,"new_proposed_II"
                           )
 transformedScbNames = c("transformed_hall_wellner"
                         ,"transformed_akritas"
                         ,"transformed_nairs_equal_precision"
                         ,"proposed_III"
                         ,"proposed_IV"
-                        ,"transformed_new"
+                        ,"new_proposed_III"
+                        ,"new_proposed_IV"
                         )
 scbNames = c(untransformedScbNames, transformedScbNames)
 
@@ -39,6 +41,7 @@ source("commons_calculateScbs.R")
 # by calling the wrapper function applyRunOneCaseStudy
 runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
+  print(sprintf("Run the following cases: %s", paste(variableParameterList, collapse=" ")))
   resultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
                             variableParameterList = variableParameterList,
                             allSamples = allSamples, 
@@ -69,9 +72,11 @@ applyRunOneCaseStudy <- function(parameter, variableParameterList, allSamples, g
 # caseParameter and censoringrate
 runOneCaseStudy <- function(caseParameter, caseSamples, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
+  print(sprintf("Start case %f", caseParameter))
+
   censoringrate = mean(sapply(caseSamples, calculateCensoringRate))
-  
-  coveragesEnclosedAreasWidths = lapply(caseSamples, calculateResultsForOneSample, 
+
+  coveragesEnclosedAreasWidths = parLapply(cl, caseSamples, calculateResultsForOneSample, 
                                         globalTimeInterval = globalTimeInterval, 
                                         trueSurvivalFunction = trueSurvivalFunction,
                                         modelFunction = modelFunction,
@@ -110,20 +115,22 @@ calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurviva
   scbList[["hall_wellner"]]          = calculateScb_hall_wellner(sample.kaplan_meier_estimator)
   scbList[["akritas"]]               = calculateScb_akritas(sample.kaplan_meier_estimator)
   scbList[["nairs_equal_precision"]] = calculateScb_nairs_equal_precision(sample.kaplan_meier_estimator)
-  scbList[["proposed_I"]]            = calculateScb_proposed_I(sample.dikta_2_estimator)
+  scbList[["proposed_I"]]            = calculateScb_proposed_I(sample.dikta_2_estimator, sample, modelFunction, mleTheta, parameterLimits)
   scbList[["proposed_II"]]           = calculateScb_proposed_II(sample.dikta_2_estimator)
-  scbList[["new"]]                   = calculateScb_new(sample.dikta_3_estimator, sample, modelFunction, mleTheta, parameterLimits)
+  scbList[["new_proposed_I"]]        = calculateScb_new_proposed_I(sample.dikta_3_estimator, sample, modelFunction, mleTheta, parameterLimits)
+  scbList[["new_proposed_II"]]       = calculateScb_new_proposed_II(sample.dikta_3_estimator)
 
   # transformed bands
   scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.kaplan_meier_estimator)
   scbList[["transformed_akritas"]]                = calculateScb_akritas(sample.kaplan_meier_estimator)
   scbList[["transformed_nairs_equal_precision"]]  = calculateScb_transformed_nairs_equal_precision(sample.kaplan_meier_estimator)
-  scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.dikta_2_estimator)
+  scbList[["proposed_III"]]                       = calculateScb_proposed_III(sample.dikta_2_estimator, sample, modelFunction, mleTheta, parameterLimits)
   scbList[["proposed_IV"]]                        = calculateScb_proposed_IV(sample.dikta_2_estimator)
-  scbList[["transformed_new"]]                    = calculateScb_transformed_new(sample.dikta_3_estimator)
+  scbList[["new_proposed_III"]]                   = calculateScb_new_proposed_III(sample.dikta_3_estimator, sample, modelFunction, mleTheta, parameterLimits)
+  scbList[["new_proposed_IV"]]                    = calculateScb_new_proposed_IV(sample.dikta_3_estimator)
 
   indexLimitsForStatistics = calculateIndexLimitsForStatistics(sample, globalTimeInterval)
-  
+
   return(lapply(scbList, calculateStatistics,
                 indexLimitsForStatistics = indexLimitsForStatistics, 
                 trueSurvivalFunction = trueSurvivalFunction))
