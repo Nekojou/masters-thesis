@@ -53,3 +53,9 @@ estimators.calculateMaximumLikelihoodEstimator <- function(sample, modelFunction
               lower = parameterLimits[["lower"]], upper = parameterLimits[["upper"]], method = "L-BFGS-B")
   return(mle$par)
 }
+
+# function to return the estimators value at time t
+estimators.getEstimatorFromT <- function(t, estimator)
+{
+  return(min(1, estimator$surv[estimator$time <= t]))
+}

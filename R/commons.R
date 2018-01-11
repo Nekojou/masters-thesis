@@ -4,10 +4,10 @@ library(survival)
 library(km.ci)
 
 # common parameters
-bootstrapRepetitions=500
-samplesize=100
-montecarloRepetitions=1000
-confidencelevel=0.05
+bootstrapRepetitions = 500
+samplesize = 100
+montecarloRepetitions = 1000
+confidencelevel = 0.05
 
 statisticTypes = c("coverage", "enclosedArea", "width")
 
@@ -25,7 +25,7 @@ transformedScbNames = c("transformed_hall_wellner"
                         ,"proposed_IV"
                         ,"transformed_new"
                         )
-scbNames = c(untransformedScbNames,transformedScbNames)
+scbNames = c(untransformedScbNames, transformedScbNames)
 
 colors = c("blue", "green", "orange", "violet", "darkgreen", "red")
 
@@ -39,7 +39,7 @@ source("commons_calculateScbs.R")
 # by calling the wrapper function applyRunOneCaseStudy
 runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterval, trueSurvivalFunction, modelFunction, parameterLimits)
 {
-  allResultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
+  resultsByCase = lapply(variableParameterList, applyRunOneCaseStudy,
                             variableParameterList = variableParameterList,
                             allSamples = allSamples, 
                             globalTimeInterval = globalTimeInterval,
@@ -47,8 +47,9 @@ runAllStudyCases <- function(allSamples, variableParameterList, globalTimeInterv
                             modelFunction = modelFunction,
                             parameterLimits = parameterLimits)
   
-  # TODO: reorderResults(allResultsByCase)
-  return(allResultsByCase)
+  # reorder results to make them plottable
+  resultsByStatistic = reorderResults(resultsByCase)
+  return(resultsByStatistic)
 }
 
 # This function is a helper function to make the call of runOneCaseStudy possible with lapply
@@ -106,12 +107,12 @@ calculateResultsForOneSample <- function(sample, globalTimeInterval, trueSurviva
   
   scbList = list()
   # untransformed bands
-  scbList[["hall_wellner"]]           = calculateScb_hall_wellner(sample.kaplan_meier_estimator)
-  scbList[["akritas"]]                = calculateScb_akritas(sample.kaplan_meier_estimator)
-  scbList[["nairs_equal_precision"]]  = calculateScb_nairs_equal_precision(sample.kaplan_meier_estimator)
-  scbList[["proposed_I"]]             = calculateScb_proposed_I(sample.dikta_2_estimator)
-  scbList[["proposed_II"]]            = calculateScb_proposed_II(sample.dikta_2_estimator)
-  scbList[["new"]]                    = calculateScb_new(sample.dikta_3_estimator)
+  scbList[["hall_wellner"]]          = calculateScb_hall_wellner(sample.kaplan_meier_estimator)
+  scbList[["akritas"]]               = calculateScb_akritas(sample.kaplan_meier_estimator)
+  scbList[["nairs_equal_precision"]] = calculateScb_nairs_equal_precision(sample.kaplan_meier_estimator)
+  scbList[["proposed_I"]]            = calculateScb_proposed_I(sample.dikta_2_estimator)
+  scbList[["proposed_II"]]           = calculateScb_proposed_II(sample.dikta_2_estimator)
+  scbList[["new"]]                   = calculateScb_new(sample.dikta_3_estimator, sample, modelFunction, mleTheta, parameterLimits)
 
   # transformed bands
   scbList[["transformed_hall_wellner"]]           = calculateScb_transformed_hall_wellner(sample.kaplan_meier_estimator)
@@ -153,13 +154,13 @@ calculateStatistics <- function(scb, indexLimitsForStatistics, trueSurvivalFunct
 
   width = calculateWidth(scb, scb$estimator, indexLimitsForStatistics, indexOffset)
   
-  return(c(coverage=coverage, enclosedArea=enclosedArea, width=width))
+  return(c(coverage = coverage, enclosedArea = enclosedArea, width = width))
 }
 
 # function to check if an SCB completely includes the true survival function
 # returns 1 if so, and 0 if not
 # TODO: calculate on t1,t2 not m1,m2? Might be possible when KM based estimators are manually calculated
-# TODO: Do not evalutae on descrete times only but develop a strategy to check this correctly
+# TODO: Do not evaluate on descrete times only but develop a strategy to check this correctly
 calculateCoverage <- function(scb, estimator, indexLimitsForStatistics, indexOffset, trueSurvivalFunction)
 {
   indexRange = indexLimitsForStatistics[1]:indexLimitsForStatistics[2]
@@ -224,13 +225,6 @@ calculateWidth <- function(scb, estimator, indexLimitsForStatistics, indexOffset
   
   return(width)
 }
-
-# TODO: Functions to be transferred:
-# S.estimator2<-function(z,theta.hat){}
-# S.estimator2.t<-function(t,z,theta.hat){}
-# S.estimator3<-function(z,theta.hat){}
-# S.estimator3.t<-function(t,z,theta.hat){}
-
 
 # generate all samples
 # arguments are:

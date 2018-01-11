@@ -39,13 +39,30 @@ calculateScb_proposed_II <- function(estimator)
   return(scb)
 }
 
-calculateScb_new <- function(estimator)
+calculateScb_new <- function(estimator, sample, modelFunction, mleTheta, parameterLimits)
 {
-  scb = estimator
-  scb$lower = scb$surv - 0.15
-  scb$upper = scb$surv + 0.15
-  scb$estimator = estimator
-  return(scb)
+  W.hat.new = c()
+  
+  for(bootIterator in 1:bootstrapRepetitions){
+    bootstrapSample = generateBootstrapSample(sample, modelFunction, mleTheta)
+    bootstrapMleTheta = estimators.calculateMaximumLikelihoodEstimator(bootstrapSample, modelFunction, parameterLimits)
+    
+    # TODO: check if this calculation is done correctly
+    bootstrapEstimator = estimators.dikta_3(bootstrapSample, modelFunction, bootstrapMleTheta)
+    bootstrapEstimatorAtOriginalTimes = sapply(estimator$time, estimators.getEstimatorFromT, estimator = bootstrapEstimator)
+    W.hat.new = c(W.hat.new, 
+                  sqrt(samplesize) * max(abs(bootstrapEstimatorAtOriginalTimes - estimator$surv)))
+  }
+  
+  W.hat.new = sort(W.hat.new)
+  q.alpha.new = W.hat.new[floor(bootstrapRepetitions * (1 - confidencelevel))]
+
+  upper.new = estimator$surv + 1 / sqrt(samplesize) * q.alpha.new
+  lower.new = estimator$surv - 1 / sqrt(samplesize) * q.alpha.new
+  scb.new = list(time = estimator$time, surv = estimator$surv,
+               upper = upper.new, lower = lower.new, estimator = estimator)
+  
+  return(scb.new)
 }
 
 calculateScb_transformed_hall_wellner <- function(estimator)

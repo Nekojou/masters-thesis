@@ -90,8 +90,11 @@ test.commons.estimators.calculateMaximumLikelihoodEstimator <- function()
   set.seed(22431873)
   alpha1 = 2
   beta1 = 3
-  alpha2 = 3.5
+  alpha2 = 1.5
   beta2 = 4.5
+  parameterLimits = list()
+  parameterLimits[["lower"]] = c(0.0001, -10)
+  parameterLimits[["upper"]] = c(10, 10)
   X = rweibull(100, alpha1, beta1)
   Y = rweibull(100, alpha2, beta2)
   
@@ -104,10 +107,8 @@ test.commons.estimators.calculateMaximumLikelihoodEstimator <- function()
   theta2 = alpha2-alpha1
   theta = c(theta1, theta2)
   
-  mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction)
+  mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction, parameterLimits)
   
-  print(theta)
-  print(mleTheta)
-  
-  stopifnot(mleTheta == c(8.387158, 1.340541))
+  stopifnot(floatCompare(mleTheta[1], 1.434523124393) == TRUE)
+  stopifnot(floatCompare(mleTheta[2], -0.341838981751) == TRUE)
 }
