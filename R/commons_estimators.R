@@ -31,11 +31,8 @@ estimators.dikta_3 <- function(sample, modelFunction, mleTheta)
 estimators.likelihoodFunction <- function(sample, theta, modelFunction)
 {
   R = sapply(sample$Z, modelFunction, theta = theta)
-  # R[!is.finite(log(R))] = 0.0001
-  # R[!is.finite(log(1-R))] = 0.9999
-  #   print(sample)
-  #   print(theta)
-  #   print(-1/length(sample$Z) * sum(data$sample*log(R)+(1-sample$delta)*log(1-R)))
+  R[R == 0] = 1e-250
+  R[R == 1] = 1-1e-10
   loglikelihood = 1/length(sample$Z) * 
             sum(sample$delta * log(R) + 
             (1 - sample$delta) * log(1 - R))

@@ -82,7 +82,17 @@ test.commons.estimators.dikta_3 <- function()
 
 test.commons.estimators.likelihoodFunction <- function()
 {
-  estimators.likelihoodFunction(sample, theta, modelFunction)
+  Z = 1 / seq(1,10)
+  delta = c(1,1,1,0,0,0,1,1,0,0)
+  sample = data.frame(Z, delta)
+  modelFunction = function(Z, theta){ return(Z) }
+  
+  log.likelihood.cmp = -1/10 * (log(1) + log(1/2) + log(1/3) + log(1-1/4) + log(1-1/5) + log(1-1/6) 
+                               + log(1/7) + log(1/8) + log(1-1/9) + log(1-1/10))
+  
+  log.likelihood = estimators.likelihoodFunction(sample, 1, modelFunction)
+  
+  stopifnot(floatCompare(log.likelihood.cmp,log.likelihood))
 }
 
 test.commons.estimators.calculateMaximumLikelihoodEstimator <- function()
@@ -102,9 +112,9 @@ test.commons.estimators.calculateMaximumLikelihoodEstimator <- function()
   delta = ifelse(X<=Y,1,0)
   sample = data.frame(Z,delta)
   
-  modelFunction = function(Z, theta){ return(theta[1]/(theta[1]+Z^theta[2])) }
-  theta1 = (alpha1*beta1^(-alpha1))/(alpha2*beta2^(-alpha2))
-  theta2 = alpha2-alpha1
+  modelFunction = function(Z, theta){ return(theta[1] / (theta[1] + Z^theta[2])) }
+  theta1 = (alpha1 * beta1^(-alpha1)) / (alpha2 * beta2^(-alpha2))
+  theta2 = alpha2 -alpha1
   theta = c(theta1, theta2)
   
   mleTheta = estimators.calculateMaximumLikelihoodEstimator(sample, modelFunction, parameterLimits)

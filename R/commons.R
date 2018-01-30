@@ -2,6 +2,7 @@ setwd(dirname(parent.frame(2)$ofile))
 # used packages
 library(survival)
 library(km.ci)
+library(parallel)
 
 # common parameters
 bootstrapRepetitions = 500
